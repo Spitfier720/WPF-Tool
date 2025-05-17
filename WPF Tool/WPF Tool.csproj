@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\EasyMock\EasiMockLib\EasyMockLib.csproj" />
+    <ProjectReference Include="..\..\EasyMock\EasiMockLib\EasyMockLib.csproj" />
   </ItemGroup>
 
 </Project>
