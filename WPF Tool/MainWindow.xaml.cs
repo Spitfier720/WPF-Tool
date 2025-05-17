@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -21,24 +22,18 @@ namespace WPF_Tool
             InitializeComponent();
             DataContext = new MainWindowViewModel();
         }
-        private void Start_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Start Service button clicked!");
-        }
 
-        private void Stop_Click(object sender, RoutedEventArgs e)
+        private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Stop Service button clicked!");
-        }
+            if(sender is TreeViewItem item && item.DataContext is TreeNode node)
+            {
+                if(DataContext is MainWindowViewModel vm && vm.TreeNodeSelectedCommand.CanExecute(node))
+                {
+                    vm.TreeNodeSelectedCommand.Execute(node);
+                }
+            }
 
-        private void Load_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Load Mock File button clicked!");
-        }
-
-        private void Clear_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Clear Log button clicked!");
+            e.Handled = true;
         }
     }
 }
