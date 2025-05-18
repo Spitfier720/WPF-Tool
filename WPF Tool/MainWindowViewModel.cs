@@ -20,8 +20,12 @@ namespace WPF_Tool
     {
         public ObservableCollection<TreeNode> RootNodes { get; } = new();
         public ICommand RemoveNodeCommand { get; }
+        public ICommand RefreshNodeCommand { get; }
         public ICommand ClearLogCommand { get; }
+        public ICommand LoadMockFileCommand { get; }
         public ICommand TreeNodeSelectedCommand { get; }
+        private readonly IFileDialogService _fileDialogService;
+
         public event PropertyChangedEventHandler? PropertyChanged;
         private string _logText = string.Empty;
         public string LogText
@@ -34,7 +38,7 @@ namespace WPF_Tool
             }
         }
 
-        public MainWindowViewModel()
+        public MainWindowViewModel(IFileDialogService fileDialogService)
         {
             var parser = new MockFileParser();
             foreach (var file in Directory.EnumerateFiles(ConfigurationManager.AppSettings["MockFileFolder"], "*.txt"))
@@ -44,8 +48,11 @@ namespace WPF_Tool
             }
 
             RemoveNodeCommand = new RelayCommand<TreeNode>(RemoveNode);
+            RefreshNodeCommand = new RelayCommand<TreeNode>(RefreshNode);
             ClearLogCommand = new RelayCommand<object>(_ => LogText = string.Empty);
+            LoadMockFileCommand = new RelayCommand<object>(_ => LoadMockFile());
             TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
+            _fileDialogService = fileDialogService;
         }
 
         private void RemoveNode(TreeNode? node)
@@ -55,6 +62,30 @@ namespace WPF_Tool
                 node.Parent.Children.Remove(node);
             else
                 RootNodes.Remove(node);
+        }
+
+        private void RefreshNode(TreeNode? node)
+        {
+            if (node is not MockTreeNode mockTreeNode) return;
+            if (mockTreeNode.Tag is not MockFileNode fileNode) return;
+
+            int index = RootNodes.IndexOf(mockTreeNode);
+            if (index < 0) return;
+
+            var parser = new MockFileParser();
+            var refreshedMock = parser.Parse(fileNode.MockFile);
+
+            RootNodes.RemoveAt(index);
+            RootNodes.Insert(index, new MockTreeNode(refreshedMock));
+        }
+
+        private void LoadMockFile()
+        {
+            var filePath = _fileDialogService.OpenFile("Text Files (*.txt)|*.txt|All Files (*.*)|*.*");
+            if (string.IsNullOrEmpty(filePath)) return;
+            var parser = new MockFileParser();
+            var mock = parser.Parse(filePath);
+            RootNodes.Add(new MockTreeNode(mock));
         }
 
         protected void OnPropertyChanged(string propertyName)
@@ -67,7 +98,6 @@ namespace WPF_Tool
             if(selectedNode is MockTreeNode treeNode && treeNode.NodeType == NodeTypes.MockItem)
             {
                 var node = treeNode.Tag as MockNode;
-                _logText = string.Empty;
 
                 if (node?.Request.RequestType == ServiceType.SOAP)
                 {

@@ -10,8 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\EasyMock\EasiMockLib\EasyMockLib.csproj" />
-    <ProjectReference Include="..\..\EasyMock\EasiMockLib\EasyMockLib.csproj" />
+    <ProjectReference Include="..\..\EasyMock\EasyMockLib\EasyMockLib.csproj" />
   </ItemGroup>
 
 </Project>

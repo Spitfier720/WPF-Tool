@@ -11,7 +11,9 @@
             <MenuItem Header="Remove"
                       Command="{Binding DataContext.RemoveNodeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                       CommandParameter="{Binding}"/>
-            <MenuItem Header="Refresh"/>
+            <MenuItem Header="Refresh"
+                      Command="{Binding DataContext.RefreshNodeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}"/>
             <MenuItem Header="Save"/>
             <MenuItem Header="Simulate Exception">
                 <MenuItem Header="Internal Server Error"/>
@@ -70,7 +72,7 @@
         <StackPanel Orientation="Horizontal" Background="#EEE" VerticalAlignment="Stretch" Grid.Column="1">
             <Button Content="Start Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}"/>
             <Button Content="Stop Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}"/>
-            <Button Content="Load Mock File" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}"/>
+            <Button Content="Load Mock File" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding LoadMockFileCommand}"/>
             <Button Content="Clear Log" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding ClearLogCommand}"/>
         </StackPanel>
 

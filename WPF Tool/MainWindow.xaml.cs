@@ -20,7 +20,7 @@ namespace WPF_Tool
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel();
+            DataContext = new MainWindowViewModel(new FileDialogService());
         }
 
         private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
