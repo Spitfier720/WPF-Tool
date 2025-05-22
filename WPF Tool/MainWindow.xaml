@@ -4,17 +4,32 @@
         xmlns:local="clr-namespace:WPF_Tool"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
+        <local:ContextMenuParameterConverter x:Key="ContextMenuParameterConverter"/>
         <HierarchicalDataTemplate DataType="{x:Type local:TreeNode}" ItemsSource="{Binding Children}">
             <TextBlock Text="{Binding Header}" />
         </HierarchicalDataTemplate>
         <ContextMenu x:Key="TreeViewItemContextMenu">
-            <MenuItem Header="Remove"
-                      Command="{Binding DataContext.RemoveNodeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                      CommandParameter="{Binding}"/>
-            <MenuItem Header="Refresh"
-                      Command="{Binding DataContext.RefreshNodeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                      CommandParameter="{Binding}"/>
-            <MenuItem Header="Save"/>
+            <MenuItem Header="Remove" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <MenuItem.CommandParameter>
+                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Remove">
+                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                    </MultiBinding>
+                </MenuItem.CommandParameter>
+            </MenuItem>
+            <MenuItem Header="Refresh" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <MenuItem.CommandParameter>
+                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Refresh">
+                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                    </MultiBinding>
+                </MenuItem.CommandParameter>
+            </MenuItem>
+            <MenuItem Header="Save" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <MenuItem.CommandParameter>
+                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Save">
+                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                    </MultiBinding>
+                </MenuItem.CommandParameter>
+            </MenuItem>
             <MenuItem Header="Simulate Exception">
                 <MenuItem Header="Internal Server Error"/>
                 <MenuItem Header="Not Found"/>
@@ -70,9 +85,9 @@
 
         <!-- Custom Menu Bar using StackPanel and Buttons -->
         <StackPanel Orientation="Horizontal" Background="#EEE" VerticalAlignment="Stretch" Grid.Column="1">
-            <Button Content="Start Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}"/>
-            <Button Content="Stop Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}"/>
-            <Button Content="Load Mock File" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding LoadMockFileCommand}"/>
+            <Button Content="Start Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding StartServiceCommand}" IsEnabled="{Binding CanStartService}"/>
+            <Button Content="Stop Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding StopServiceCommand}" IsEnabled="{Binding CanStopService}"/>
+            <Button Content="Load Mock File" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding LoadMockFileCommand}" IsEnabled="{Binding CanLoadMockFile}"/>
             <Button Content="Clear Log" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding ClearLogCommand}"/>
         </StackPanel>
 

@@ -10,7 +10,35 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\EasyMock\EasyMockLib\EasyMockLib.csproj" />
+    <None Remove="MockFiles\RestDemo.txt" />
+    <None Remove="MockFiles\SoapDemo.txt" />
+    <None Remove="SoapServiceMatchingElements.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="MockFiles\RestDemo.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MockFiles\SoapDemo.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SoapServiceMatchingElements.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasyMockLib\EasyMockLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="TreeNode.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(ProjectDir)MockFiles&quot; &quot;$(OutDir)MockFiles&quot; /E /I /Y" />
+  </Target>
 
 </Project>
