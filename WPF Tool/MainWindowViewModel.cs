@@ -10,7 +10,9 @@ using System.Net.Http;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Xml.Linq;
+using Application = System.Windows.Application;
 
 namespace WPF_Tool
 {
@@ -20,6 +22,7 @@ namespace WPF_Tool
 
         public ObservableCollection<TreeNode> RootNodes { get; } = new();
         public ICommand MockNodeContextMenuCommand { get; }
+        public ICommand SimulateExceptionCommand { get; }
         public ICommand ClearLogCommand { get; }
         public ICommand LoadMockFileCommand { get; }
         public ICommand StartServiceCommand { get; }
@@ -59,6 +62,10 @@ namespace WPF_Tool
         public bool CanStopService => IsServiceRunning;
         public bool CanLoadMockFile => !IsServiceRunning;
 
+        private const string SimulateExceptionInternalServerError = "InternalServerError";
+        private const string SimulateExceptionNotFound = "NotFound";
+        private const string SimulateExceptionTimeOut = "TimeOut";
+
         private HttpListener listener = new HttpListener();
         private CancellationTokenSource? tokenSource;
         private Dictionary<string, Dictionary<string, List<string>>> soapMatchingConfig;
@@ -73,6 +80,7 @@ namespace WPF_Tool
             }
 
             MockNodeContextMenuCommand = new RelayCommand<object>(OnMockNodeContextMenuAction);
+            SimulateExceptionCommand = new RelayCommand<object>(OnSimulateException);
             ClearLogCommand = new RelayCommand<object>(_ => LogText = string.Empty);
             LoadMockFileCommand = new RelayCommand<object>(_ => LoadMockFile());
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
@@ -154,19 +162,19 @@ namespace WPF_Tool
                         AppendOutput(Environment.NewLine);
                         if (!string.IsNullOrEmpty(mock.SimulateException))
                         {
-                            //if (mock.SimulateException == this.toolStripInternalServerError.Text)
-                            //{
-                            //    OutputResponseContent("", HttpStatusCode.InternalServerError, context, response);
-                            //}
-                            //else if (mock.SimulateException == this.toolStripNotFound.Text)
-                            //{
-                            //    OutputResponseContent("", HttpStatusCode.NotFound, context, response);
-                            //}
-                            //else if (mock.SimulateException == this.toolStripTimeOut.Text)
-                            //{
-                            //    Thread.Sleep(SERVICE_TIMEOUT_IN_SECONDS * 1000);
-                            //    return;
-                            //}
+                            if (mock.SimulateException == SimulateExceptionInternalServerError)
+                            {
+                                OutputResponseContent("", HttpStatusCode.InternalServerError, context, response);
+                            }
+                            else if (mock.SimulateException == SimulateExceptionNotFound)
+                            {
+                                OutputResponseContent("", HttpStatusCode.NotFound, context, response);
+                            }
+                            else if (mock.SimulateException == SimulateExceptionTimeOut)
+                            {
+                                Thread.Sleep(SERVICE_TIMEOUT_IN_SECONDS * 1000);
+                                return;
+                            }
                         }
                         else if (mock.Response == null)
                         {
@@ -440,6 +448,28 @@ namespace WPF_Tool
                 case "Save":
                     SaveMock(node);
                     break;
+            }
+        }
+
+        private void OnSimulateException(object parameter)
+        {
+            if (parameter is not Tuple<string, MockTreeNode> ctxParam)
+                return;
+
+            var exceptionText = ctxParam.Item1;
+            var node = ctxParam.Item2;
+
+            if (node?.Tag is not MockNode mockNode)
+                return;
+
+            // Toggle the exception
+            if (mockNode.SimulateException == exceptionText)
+            {
+                mockNode.SimulateException = string.Empty;
+            }
+            else
+            {
+                mockNode.SimulateException = exceptionText;
             }
         }
 

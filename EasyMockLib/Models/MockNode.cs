@@ -1,19 +1,29 @@
-﻿using EasyMockLib.MatchingPolicies;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+﻿using System.ComponentModel;
 
 namespace EasyMockLib.Models
 {
-    public class MockNode
+    public class MockNode : INotifyPropertyChanged
     {
         public Request Request { get; set; }
         public Response Response { get; set; }
-        public string SimulateException { get; set; }
+
+        private string _simulateException;
+        public string SimulateException
+        {
+            get => _simulateException;
+            set
+            {
+                if (_simulateException != value)
+                {
+                    _simulateException = value;
+                    OnPropertyChanged(nameof(SimulateException));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
     }
 }

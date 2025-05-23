@@ -8,34 +8,119 @@
         <HierarchicalDataTemplate DataType="{x:Type local:TreeNode}" ItemsSource="{Binding Children}">
             <TextBlock Text="{Binding Header}" />
         </HierarchicalDataTemplate>
-        <ContextMenu x:Key="TreeViewItemContextMenu">
+        
+        <ContextMenu x:Key="TreeViewItemContextMenu" x:Shared="False">
+            <MenuItem Header="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+            
             <MenuItem Header="Remove" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Remove">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
                     </MultiBinding>
                 </MenuItem.CommandParameter>
+            
             </MenuItem>
+            
             <MenuItem Header="Refresh" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Refresh">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
                     </MultiBinding>
                 </MenuItem.CommandParameter>
+            
             </MenuItem>
+            
             <MenuItem Header="Save" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Save">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
                     </MultiBinding>
                 </MenuItem.CommandParameter>
+            
             </MenuItem>
+            
             <MenuItem Header="Simulate Exception">
-                <MenuItem Header="Internal Server Error"/>
-                <MenuItem Header="Not Found"/>
-                <MenuItem Header="Time Out"/>
+                
+                <MenuItem Header="Internal Server Error"
+                          Command="{Binding DataContext.SimulateExceptionCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                    
+                    <MenuItem.CommandParameter>
+                        
+                        <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="SimulateException:InternalServerError">
+                            <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                        </MultiBinding>
+                    
+                    </MenuItem.CommandParameter>
+
+                    <MenuItem.Style>
+
+                        <Style TargetType="MenuItem">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="InternalServerError" >
+                                    <Setter Property="Foreground" Value="Red"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+
+                    </MenuItem.Style>
+                </MenuItem>
+                
+                <MenuItem Header="Not Found"
+                          Command="{Binding DataContext.SimulateExceptionCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+
+                    <MenuItem.CommandParameter>
+
+                        <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="SimulateException:NotFound">
+                            <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                        </MultiBinding>
+
+                    </MenuItem.CommandParameter>
+
+                    <MenuItem.Style>
+
+                        <Style TargetType="MenuItem">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="NotFound">
+                                    <Setter Property="Foreground" Value="Red"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+
+                    </MenuItem.Style>
+                </MenuItem>
+                
+                <MenuItem Header="Time Out"
+                          Command="{Binding DataContext.SimulateExceptionCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                
+                    <MenuItem.CommandParameter>
+                    
+                        <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="SimulateException:TimeOut">
+                            <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                        </MultiBinding>
+                    
+                    </MenuItem.CommandParameter>
+                    
+                    <MenuItem.Style>
+                
+                        <Style TargetType="MenuItem">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="TimeOut">
+                                    <Setter Property="Foreground" Value="Red"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+        
+                    </MenuItem.Style>
+                </MenuItem>
             </MenuItem>
         </ContextMenu>
+        
         <Style x:Key="ModernMenuButton" TargetType="Button">
             <Setter Property="Foreground" Value="Black"/>
             <Setter Property="Background" Value="White"/>
