@@ -66,7 +66,7 @@ namespace WPF_Tool
         private const string SimulateExceptionNotFound = "NotFound";
         private const string SimulateExceptionTimeOut = "TimeOut";
 
-        private HttpListener listener = new HttpListener();
+        private HttpListener listener = new HttpListener { Prefixes = { $"http://localhost:{ConfigurationManager.AppSettings["BindingPort"]}/" } };
         private CancellationTokenSource? tokenSource;
         private Dictionary<string, Dictionary<string, List<string>>> soapMatchingConfig;
 
@@ -111,6 +111,7 @@ namespace WPF_Tool
 
             Task.Run(async () =>
             {
+                listener.Prefixes.Add("http://localhost:8080/");
                 listener.Start();
                 AppendOutput($"Mock service started.\n");
                 Application.Current.Dispatcher.Invoke(() => IsServiceRunning = true);
