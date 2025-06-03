@@ -1,0 +1,6 @@
+{
+  "/Countries": {
+    "GET": [],
+    "POST": ["countryRequest.code"]
+  }
+}

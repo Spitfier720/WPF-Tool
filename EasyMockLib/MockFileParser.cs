@@ -25,12 +25,18 @@ namespace EasyMockLib
         private const string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>";
         private readonly XNamespace soap = "http://schemas.xmlsoap.org/soap/envelope/";
         private int lineNumber = 0;
-        public MockFileParser()
+        private readonly Dictionary<string, Dictionary<string, List<string>>> _restConfig;
+        private readonly Dictionary<string, Dictionary<string, List<string>>> _soapConfig;
+        public MockFileParser(
+            Dictionary<string, Dictionary<string, List<string>>> restConfig,
+            Dictionary<string, Dictionary<string, List<string>>> soapConfig)
         {
+            _restConfig = restConfig;
+            _soapConfig = soapConfig;
         }
         public MockFileNode Parse(string filePath)
         {
-            MockFileNode root = new MockFileNode()
+            MockFileNode root = new MockFileNode(_restConfig, _soapConfig)
             {
                 MockFile = filePath,
             };

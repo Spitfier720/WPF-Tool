@@ -10,8 +10,6 @@
         </HierarchicalDataTemplate>
         
         <ContextMenu x:Key="TreeViewItemContextMenu" x:Shared="False">
-            <MenuItem Header="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-            
             <MenuItem Header="Remove" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                 
                 <MenuItem.CommandParameter>
@@ -21,18 +19,19 @@
                 </MenuItem.CommandParameter>
             
             </MenuItem>
-            
-            <MenuItem Header="Refresh" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
-                
+
+            <MenuItem Header="Refresh"
+                      Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      IsEnabled="{Binding DataContext.!IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Refresh">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
                     </MultiBinding>
                 </MenuItem.CommandParameter>
-            
             </MenuItem>
-            
-            <MenuItem Header="Save" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+
+            <MenuItem Header="Save" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      IsEnabled="{Binding DataContext.!IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Save">
@@ -41,8 +40,8 @@
                 </MenuItem.CommandParameter>
             
             </MenuItem>
-            
-            <MenuItem Header="Simulate Exception">
+
+            <MenuItem Header="Simulate Exception" IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 
                 <MenuItem Header="Internal Server Error"
                           Command="{Binding DataContext.SimulateExceptionCommand, RelativeSource={RelativeSource AncestorType=Window}}">

@@ -14,8 +14,14 @@ class IntegrationTestClient
 
         // REST GET request
         var restGetUrl = baseUrl + "Countries";
-        var restGetResponse = await client.GetAsync(restGetUrl);
-        Console.WriteLine($"REST GET: {restGetUrl} => {restGetResponse.StatusCode}");
+        var restBody = @"{
+                            ""countryRequest"": {
+                                ""code"": ""CA""
+                            }
+                        }";
+        var restContent = new StringContent(restBody, Encoding.UTF8, "application/json");
+        var restGetResponse = await client.PostAsync(restGetUrl, restContent);
+        Console.WriteLine($"REST POST: {restGetUrl} => {restGetResponse.StatusCode}");
         Console.WriteLine(await restGetResponse.Content.ReadAsStringAsync());
 
         // SOAP request
@@ -24,7 +30,7 @@ class IntegrationTestClient
                             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
                               <soap:Body>
                                 <GetProfileRequest>
-                                  <ProfileId>1000001</ProfileId>
+                                  <profileId>1000002</profileId>
                                 </GetProfileRequest>
                               </soap:Body>
                             </soap:Envelope>";

@@ -980,3 +980,24 @@ ResponseBody: [
   }
 ]
 
+15:34:57.1861469 POST http://localhost:8888/Countries Request
+RequestBody: {"countryRequest":{"code":"CA"}}
+
+15:34:57.1861469 POST http://localhost:8888/Countries Response
+ResponseBody: [
+  {
+    "name": "Canada",
+    "code": "CA"
+  }
+]
+
+15:34:57.1861469 POST http://localhost:8888/Countries Request
+RequestBody: {"countryRequest":{"code":"US"}}
+
+15:34:57.1861469 POST http://localhost:8888/Countries Response
+ResponseBody: [
+  {
+    "name": "United States",
+    "code": "US"
+  }
+]

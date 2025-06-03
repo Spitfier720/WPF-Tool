@@ -7,18 +7,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using WPF_Tool;
 
 namespace EasyMockLib.Models
 {
     public class MockFileNode
     {
-        public MockFileNode()
+        public MockFileNode(
+            Dictionary<string, Dictionary<string, List<string>>> restConfig,
+            Dictionary<string, Dictionary<string, List<string>>> soapConfig)
         {
             Nodes = new List<MockNode>();
+            RestServiceMatchingConfig = restConfig;
+            SoapServiceMatchingConfig = soapConfig;
         }
 
         public string MockFile { get; set; }
         public List<MockNode> Nodes { get; set; }
+        public Dictionary<string, Dictionary<string, List<string>>> RestServiceMatchingConfig { get; }
+        public Dictionary<string, Dictionary<string, List<string>>> SoapServiceMatchingConfig { get; }
+
 
         public MockNode GetMock(ServiceType serviceType, string service, 
             string method, string requestContent, 
@@ -28,6 +36,7 @@ namespace EasyMockLib.Models
             m.Request.RequestType == serviceType &&
             m.Request.MethodName.Equals(method, StringComparison.OrdinalIgnoreCase) &&
             MatchUrl(m, service, method));
+
             if (mocks.Any())
             {
                 if (mocks.Count() == 1)
@@ -36,6 +45,18 @@ namespace EasyMockLib.Models
                 }
                 if (serviceType == ServiceType.REST)
                 {
+                    if(RestServiceMatchingConfig.ContainsKey(service) &&
+                       RestServiceMatchingConfig[service].ContainsKey(method) &&
+                       RestServiceMatchingConfig[service][method].Count() > 0)
+                    {
+                        var restMatchingPolicy = new RestRequestValueMatchingPolicy();
+                        var mock = restMatchingPolicy.Apply(requestContent, mocks, RestServiceMatchingConfig[service][method]);
+                        if (mock != null)
+                        {
+                            return mock;
+                        }
+                    }
+
                     IMatchingPolicy matchingPolicy;
                     if (method.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
                     {
@@ -54,6 +75,19 @@ namespace EasyMockLib.Models
                 }
                 else if (serviceType == ServiceType.SOAP)
                 {
+
+                    if (SoapServiceMatchingConfig.ContainsKey(service) &&
+                        SoapServiceMatchingConfig[service].ContainsKey(method) &&
+                        SoapServiceMatchingConfig[service][method].Count() > 0)
+                    {
+                        var soapMatchingPolicy = new SoapRequestValueMatchingPolicy();
+                        var mock = soapMatchingPolicy.Apply(requestContent, mocks, SoapServiceMatchingConfig[service][method]);
+                        if (mock != null)
+                        {
+                            return mock;
+                        }
+                    }
+
                     XElement xRequestContent = XElement.Parse(requestContent);
                     List<string> elementsToCompare;
                     if (soapMatchingElements.ContainsKey(service) && soapMatchingElements[service].ContainsKey(method))
