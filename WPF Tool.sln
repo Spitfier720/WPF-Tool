@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyMockLib", "EasyMockLib\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPF Tool Tester", "WPF Tool Tester\WPF Tool Tester.csproj", "{5E3154EC-FB6C-484C-97EC-EB1CC9C3F4FB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPF Tool Unit Testing", "WPF Tool Unit Testing\WPF Tool Unit Testing.csproj", "{47C09327-A153-4BF9-A481-3DB0ADD2BE3A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{5E3154EC-FB6C-484C-97EC-EB1CC9C3F4FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E3154EC-FB6C-484C-97EC-EB1CC9C3F4FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E3154EC-FB6C-484C-97EC-EB1CC9C3F4FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47C09327-A153-4BF9-A481-3DB0ADD2BE3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47C09327-A153-4BF9-A481-3DB0ADD2BE3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47C09327-A153-4BF9-A481-3DB0ADD2BE3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47C09327-A153-4BF9-A481-3DB0ADD2BE3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

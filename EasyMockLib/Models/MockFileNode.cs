@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using WPF_Tool;
 
 namespace EasyMockLib.Models
@@ -34,7 +35,7 @@ namespace EasyMockLib.Models
         {
             var mocks = this.Nodes.Where(m =>
             m.Request.RequestType == serviceType &&
-            m.Request.MethodName.Equals(method, StringComparison.OrdinalIgnoreCase) &&
+            m.MethodName.Equals(method, StringComparison.OrdinalIgnoreCase) &&
             MatchUrl(m, service, method));
 
             if (mocks.Any())
@@ -131,7 +132,7 @@ namespace EasyMockLib.Models
             }
             else
             {
-                return mock.Request.Url.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
+                return mock.Url.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
             }
         }
 

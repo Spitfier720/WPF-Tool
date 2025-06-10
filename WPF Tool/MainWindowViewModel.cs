@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using Application = System.Windows.Application;
 
 namespace WPF_Tool
@@ -83,15 +84,32 @@ namespace WPF_Tool
 
         private HttpListener listener = new HttpListener { Prefixes = { $"http://localhost:{ConfigurationManager.AppSettings["BindingPort"]}/" } };
         private CancellationTokenSource? tokenSource;
-        private Dictionary<string, Dictionary<string, List<string>>> soapMatchingConfig;
 
         public MainWindowViewModel(IFileDialogService fileDialogService)
         {
-            var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
-            foreach (var file in Directory.EnumerateFiles(ConfigurationManager.AppSettings["MockFileFolder"], "*.txt"))
+            //var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
+            //foreach (var file in Directory.EnumerateFiles(ConfigurationManager.AppSettings["MockFileFolder"], "*.txt"))
+            //{
+            //    var mock = parser.Parse(file);
+            //    RootNodes.Add(new MockTreeNode(mock));
+            //}
+
+            foreach (var file in Directory.EnumerateFiles(ConfigurationManager.AppSettings["MockFileFolder"], "*.xml"))
             {
-                var mock = parser.Parse(file);
-                RootNodes.Add(new MockTreeNode(mock));
+                var serializer = new XmlSerializer(typeof(List<MockNode>));
+                List<MockNode> nodes = new List<MockNode>();
+                using (var xml = File.OpenRead(file))
+                {
+                    nodes = (List<MockNode>)serializer.Deserialize(xml);
+                }
+
+                var mockFileNode = new MockFileNode(restServiceMatchingConfig, soapServiceMatchingConfig)
+                {
+                    MockFile = file,
+                    Nodes = nodes
+                };
+
+                RootNodes.Add(new MockTreeNode(mockFileNode));
             }
 
             MockNodeContextMenuCommand = new RelayCommand<object>(OnMockNodeContextMenuAction);
@@ -106,15 +124,14 @@ namespace WPF_Tool
             StopServiceCommand = new RelayCommand<object>(_ => StopWebServer(), _ => CanStopService);
             TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
             _fileDialogService = fileDialogService;
-            soapMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("SoapServiceMatchingElements.json"));
         }
         private void LoadMockFile()
         {
-            var filePath = _fileDialogService.OpenFile("Text Files (*.txt)|*.txt|All Files (*.*)|*.*");
+            var filePath = _fileDialogService.OpenFile("XML Files (*.xml)|*.xml");
             if (string.IsNullOrEmpty(filePath)) return;
-            var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
-            var mock = parser.Parse(filePath);
-            RootNodes.Add(new MockTreeNode(mock));
+            //var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
+            //var mock = parser.Parse(filePath);
+            //RootNodes.Add(new MockTreeNode(mock));
         }
 
         private void StartWebServer()
@@ -287,7 +304,7 @@ namespace WPF_Tool
         {
             foreach (var node in RootNodes)
             {
-                var mock = (node.Tag as MockFileNode)?.GetMock(serviceType, service, method, requestContent, soapMatchingConfig);
+                var mock = (node.Tag as MockFileNode)?.GetMock(serviceType, service, method, requestContent, soapServiceMatchingConfig);
                 if (mock != null)
                 {
                     return mock;
@@ -349,13 +366,13 @@ namespace WPF_Tool
 
                     if (node?.Request.RequestType == ServiceType.SOAP)
                     {
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Request.Url} {node.Request.ServiceName} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Request.Url} {node.Request.ServiceName} Response\r\n");
+                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
+                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
                     }
                     else
                     {
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Request.MethodName} {node.Request.Url} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Request.Url} {node.Request.ServiceName} Response\r\n");
+                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.MethodName} {node.Url} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
+                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
                     }
 
                     if (node.Response != null)
@@ -386,10 +403,10 @@ namespace WPF_Tool
                     var node = treeNode.Tag as MockNode;
                     if (node?.Request.RequestType == ServiceType.REST)
                     {
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Request.MethodName} {node.Request.Url} Request");
+                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.MethodName} {node.Url} Request");
                         writer.WriteLine($"RequestBody: {node.Request.RequestBody.Content}");
                         writer.WriteLine();
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Request.MethodName} {node.Request.Url} Response");
+                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.MethodName} {node.Url} Response");
                         if (node.Response.StatusCode == HttpStatusCode.OK)
                         {
                             writer.WriteLine($"ResponseBody: {node.Response.ResponseBody.Content}");
@@ -402,13 +419,13 @@ namespace WPF_Tool
                     }
                     else
                     {
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Request.Url} {node.Request.MethodName} Request");
-                        if (!node.Request.MethodName.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
+                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Url} {node.MethodName} Request");
+                        if (!node.MethodName.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
                         {
                             writer.WriteLine(node.Request.RequestBody.Content);
                         }
                         writer.WriteLine();
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Request.Url} {node.Request.MethodName} Response");
+                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Url} {node.MethodName} Response");
                         writer.WriteLine(node.Response.ResponseBody.Content);
                         writer.WriteLine();
                     }
@@ -462,10 +479,10 @@ namespace WPF_Tool
                         int index = RootNodes.IndexOf(node);
                         if (index >= 0)
                         {
-                            var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
-                            var refreshedMock = parser.Parse(fileNode.MockFile);
+                            //var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
+                            //var refreshedMock = parser.Parse(fileNode.MockFile);
                             RootNodes.RemoveAt(index);
-                            RootNodes.Insert(index, new MockTreeNode(refreshedMock));
+                            //RootNodes.Insert(index, new MockTreeNode(refreshedMock));
                         }
                     }
                     break;

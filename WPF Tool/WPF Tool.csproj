@@ -13,8 +13,6 @@
     <None Remove="MockFiles\RestDemo.txt" />
     <None Remove="MockFiles\SoapDemo.txt" />
     <None Remove="RestServiceMatchingConfig.json" />
-    <None Remove="SoapServiceMatchingConfig.json" />
-    <None Remove="SoapServiceMatchingElements.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,9 +26,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="SoapServiceMatchingConfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SoapServiceMatchingElements.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

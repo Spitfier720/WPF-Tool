@@ -16,7 +16,7 @@ namespace EasyMockLib.MatchingPolicies
             MockNode matchingMock = null;
             foreach (var mock in mocks)
             {
-                var mockQuery = ConvertQueryToDictionary(mock.Request.Url);
+                var mockQuery = ConvertQueryToDictionary(mock.Url);
                 if (mockQuery.Keys.Count == 0 && matchingMock == null)
                 {
                     // Make it default mock if there is no query string

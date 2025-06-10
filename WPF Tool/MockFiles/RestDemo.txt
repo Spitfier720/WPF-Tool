@@ -7,7 +7,7 @@ ResponseBody: [
     "code": "AF"
   },
   {
-    "name": "land Islands",
+    "name": "Åland Islands",
     "code": "AX"
   },
   {
@@ -999,5 +999,67 @@ ResponseBody: [
   {
     "name": "United States",
     "code": "US"
+  }
+]
+
+16:00:00.0000000 POST http://localhost:8888/Countries/Details Request
+RequestBody: {
+  "countryRequest": {
+    "code": "CA",
+    "details": {
+      "population": 38000000,
+      "languages": ["English", "French"],
+      "region": {
+        "name": "North America",
+        "subregions": ["Northern America", "Central America"]
+      }
+    },
+    "active": true
+  }
+}
+
+16:00:00.0000000 POST http://localhost:8888/Countries/Details Response
+ResponseBody: [
+  {
+    "name": "Canada",
+    "code": "CA",
+    "population": 38000000,
+    "languages": ["English", "French"],
+    "region": {
+      "name": "North America",
+      "subregions": ["Northern America", "Central America"]
+    },
+    "active": true
+  }
+]
+
+16:00:01.0000000 POST http://localhost:8888/Countries/Details Request
+RequestBody: {
+  "countryRequest": {
+    "code": "DE",
+    "details": {
+      "population": 83000000,
+      "languages": ["German"],
+      "region": {
+        "name": "Europe",
+        "subregions": ["Western Europe"]
+      }
+    },
+    "active": false
+  }
+}
+
+16:00:01.0000000 POST http://localhost:8888/Countries/Details Response
+ResponseBody: [
+  {
+    "name": "Germany",
+    "code": "DE",
+    "population": 83000000,
+    "languages": ["German"],
+    "region": {
+      "name": "Europe",
+      "subregions": ["Western Europe"]
+    },
+    "active": false
   }
 ]

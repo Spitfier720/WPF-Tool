@@ -21,6 +21,9 @@ namespace EasyMockLib.Models
             }
         }
 
+        public string Url { get; set; }
+        public string MethodName { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

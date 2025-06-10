@@ -1,6 +1,15 @@
 {
   "/Countries": {
     "GET": [],
-    "POST": ["countryRequest.code"]
+    "POST": [ "countryRequest.code" ]
+  },
+  "/Countries/Details": {
+    "POST": [
+      "countryRequest.code",
+      "countryRequest.details.population",
+      "countryRequest.details.languages",
+      "countryRequest.details.region.name",
+      "countryRequest.details.region.subregions"
+    ]
   }
 }
