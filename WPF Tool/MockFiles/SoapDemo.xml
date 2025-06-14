@@ -1,6 +1,6 @@
 ﻿<ArrayOfMockNode>
 	<MockNode>
-		<Url>http://localhost:8888/ProfileService</Url>
+		<Url>ProfileService</Url>
 		<MethodName>GetProfile</MethodName>
 		<Request>
 			<RequestBody>
@@ -61,7 +61,7 @@
 		</Response>
 	</MockNode>
 	<MockNode>
-		<Url>http://localhost:8888/ProfileService</Url>
+		<Url>ProfileService</Url>
 		<MethodName>GetProfile</MethodName>
 		<Request>
 			<Requestbody>

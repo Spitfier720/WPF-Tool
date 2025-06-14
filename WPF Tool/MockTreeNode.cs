@@ -27,7 +27,7 @@ namespace WPF_Tool
         {
             NodeType = NodeTypes.MockItem;
             Tag = node;
-            Header = $"{node.Request.ServiceName} - {node.MethodName}";
+            Header = $"{node.Url} - {node.MethodName}";
         }
 
         public bool IsDirty { get; set; }

@@ -1,7 +1,7 @@
 ﻿<ArrayOfMockNode>
 	<MockNode>
 		<MethodName>GET</MethodName>
-		<Url>http://localhost:8888/Countries</Url>
+		<Url>/Countries</Url>
 		<Request></Request>
 		<Response>
 			<StatusCode>OK</StatusCode>
@@ -994,7 +994,7 @@
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>http://localhost:8888/Countries</Url>
+		<Url>/Countries</Url>
 		<Request>
 			<RequestBody>
 				<Content>
@@ -1025,7 +1025,7 @@
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>http://localhost:8888/Countries</Url>
+		<Url>/Countries</Url>
 		<Request>
 			<RequestBody>
 				<Content>
@@ -1052,7 +1052,7 @@
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>http://localhost:8888/Countries/Details</Url>
+		<Url>/Countries/Details</Url>
 		<Request>
 			<RequestBody>
 				<Content>
@@ -1099,7 +1099,7 @@
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>http://localhost:8888/Countries/Details</Url>
+		<Url>/Countries/Details</Url>
 		<Request>
 			<RequestBody>
 				<Content>

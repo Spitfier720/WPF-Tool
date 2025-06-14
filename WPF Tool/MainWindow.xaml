@@ -8,8 +8,15 @@
         <HierarchicalDataTemplate DataType="{x:Type local:TreeNode}" ItemsSource="{Binding Children}">
             <TextBlock Text="{Binding Header}" />
         </HierarchicalDataTemplate>
-        
+
         <ContextMenu x:Key="TreeViewItemContextMenu" x:Shared="False">
+            <MenuItem Header="Add" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <MenuItem.CommandParameter>
+                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Add">
+                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                    </MultiBinding>
+                </MenuItem.CommandParameter>
+            </MenuItem>
             <MenuItem Header="Remove" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                 
                 <MenuItem.CommandParameter>
@@ -22,7 +29,7 @@
 
             <MenuItem Header="Refresh"
                       Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                      IsEnabled="{Binding DataContext.!IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
+                      IsEnabled="{Binding DataContext.IsMockNodeSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Refresh">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
@@ -31,7 +38,7 @@
             </MenuItem>
 
             <MenuItem Header="Save" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                      IsEnabled="{Binding DataContext.!IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
+                      IsEnabled="{Binding DataContext.IsMockNodeSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Save">
@@ -180,8 +187,7 @@
             <TreeView x:Name="treeView" ItemsSource="{Binding RootNodes}">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
-                        <Setter Property="ContextMenu" Value="{StaticResource TreeViewItemContextMenu}" />
-                        <EventSetter Event="Selected" Handler="TreeViewItem_Selected"/>
+                        <Setter Property="ContextMenu" Value="{StaticResource TreeViewItemContextMenu}"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>

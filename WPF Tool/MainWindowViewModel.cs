@@ -29,7 +29,7 @@ namespace WPF_Tool
         public ICommand LoadMockFileCommand { get; }
         public ICommand StartServiceCommand { get; }
         public ICommand StopServiceCommand { get; }
-        public ICommand TreeNodeSelectedCommand { get; }
+        // public ICommand TreeNodeSelectedCommand { get; }
         private readonly IFileDialogService _fileDialogService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -53,6 +53,7 @@ namespace WPF_Tool
             set
             {
                 if (_isMockFileSelected == value) return;
+                _isMockFileSelected = value;
                 OnPropertyChanged(nameof(IsMockFileSelected));
                 OnPropertyChanged(nameof(IsMockNodeSelected));
             }
@@ -122,7 +123,7 @@ namespace WPF_Tool
             LoadMockFileCommand = new RelayCommand<object>(_ => LoadMockFile());
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
             StopServiceCommand = new RelayCommand<object>(_ => StopWebServer(), _ => CanStopService);
-            TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
+            // TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
             _fileDialogService = fileDialogService;
         }
         private void LoadMockFile()
@@ -444,6 +445,27 @@ namespace WPF_Tool
 
             switch (action)
             {
+                case "Add":
+                    var editor = new MockNodeEditorWindow();
+                    if (editor.ShowDialog() == true)
+                    {
+                        var vm = editor.EditorViewModel;
+                        var newMockNode = new MockNode
+                        {
+                            MethodName = vm.MethodName,
+                            Url = vm.Url,
+                            // ... set other properties, including Request/Response, etc.
+                        };
+                        // Find the correct parent (service) and add the new node
+                        if (node.Tag is MockFileNode existingFileNode)
+                        {
+                            existingFileNode.Nodes.Add(newMockNode);
+                            // Optionally, update the UI tree as well
+                            node.Children.Add(new MockTreeNode(newMockNode) { Parent = node });
+                        }
+                    }
+                    break;
+
                 case "Remove":
                     if (node.NodeType == NodeTypes.MockFile)
                     {
