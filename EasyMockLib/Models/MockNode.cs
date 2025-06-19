@@ -6,23 +6,9 @@ namespace EasyMockLib.Models
     {
         public Request Request { get; set; }
         public Response Response { get; set; }
-
-        private string _simulateException;
-        public string SimulateException
-        {
-            get => _simulateException;
-            set
-            {
-                if (_simulateException != value)
-                {
-                    _simulateException = value;
-                    OnPropertyChanged(nameof(SimulateException));
-                }
-            }
-        }
-
         public string Url { get; set; }
         public string MethodName { get; set; }
+        public string Description { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>

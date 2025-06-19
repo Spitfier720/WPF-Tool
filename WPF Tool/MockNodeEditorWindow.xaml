@@ -19,7 +19,7 @@
             <TextBox Text="{Binding RequestBody, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" AcceptsReturn="True" Height="60"/>
             <TextBlock Text="Response Body:"/>
             <TextBox Text="{Binding ResponseBody, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" AcceptsReturn="True" Height="60"/>
-            <TextBlock Text="Response Delay (ms):"/>
+            <TextBlock Text="Response Delay (s):"/>
             <TextBox Text="{Binding ResponseDelay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
             <TextBlock Text="Response Status Code:"/>
             <TextBox Text="{Binding ResponseStatusCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>

@@ -1,5 +1,6 @@
 ﻿<Window x:Class="WPF_Tool.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WPF_Tool"
         Title="MainWindow" Height="450" Width="800">
@@ -10,13 +11,26 @@
         </HierarchicalDataTemplate>
 
         <ContextMenu x:Key="TreeViewItemContextMenu" x:Shared="False">
-            <MenuItem Header="Add" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+            <MenuItem Header="Add" 
+                      Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Add">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
                     </MultiBinding>
                 </MenuItem.CommandParameter>
             </MenuItem>
+
+            <MenuItem Header="Edit" 
+                      Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      IsEnabled="{Binding DataContext.IsMockNodeSelected, RelativeSource={RelativeSource AncestorType=Window}}">
+                <MenuItem.CommandParameter>
+                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Edit">
+                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
+                    </MultiBinding>
+                </MenuItem.CommandParameter>
+            </MenuItem>
+
             <MenuItem Header="Remove" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                 
                 <MenuItem.CommandParameter>
@@ -29,7 +43,7 @@
 
             <MenuItem Header="Refresh"
                       Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                      IsEnabled="{Binding DataContext.IsMockNodeSelected, RelativeSource={RelativeSource AncestorType=Window}}">
+                      IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Refresh">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
@@ -38,92 +52,14 @@
             </MenuItem>
 
             <MenuItem Header="Save" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                      IsEnabled="{Binding DataContext.IsMockNodeSelected, RelativeSource={RelativeSource AncestorType=Window}}">
-                
+                      IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
+
                 <MenuItem.CommandParameter>
                     <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Save">
                         <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
                     </MultiBinding>
                 </MenuItem.CommandParameter>
-            
-            </MenuItem>
 
-            <MenuItem Header="Simulate Exception" IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
-                
-                <MenuItem Header="Internal Server Error"
-                          Command="{Binding DataContext.SimulateExceptionCommand, RelativeSource={RelativeSource AncestorType=Window}}">
-                    
-                    <MenuItem.CommandParameter>
-                        
-                        <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="SimulateException:InternalServerError">
-                            <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                        </MultiBinding>
-                    
-                    </MenuItem.CommandParameter>
-
-                    <MenuItem.Style>
-
-                        <Style TargetType="MenuItem">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="InternalServerError" >
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-
-                    </MenuItem.Style>
-                </MenuItem>
-                
-                <MenuItem Header="Not Found"
-                          Command="{Binding DataContext.SimulateExceptionCommand, RelativeSource={RelativeSource AncestorType=Window}}">
-
-                    <MenuItem.CommandParameter>
-
-                        <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="SimulateException:NotFound">
-                            <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                        </MultiBinding>
-
-                    </MenuItem.CommandParameter>
-
-                    <MenuItem.Style>
-
-                        <Style TargetType="MenuItem">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="NotFound">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-
-                    </MenuItem.Style>
-                </MenuItem>
-                
-                <MenuItem Header="Time Out"
-                          Command="{Binding DataContext.SimulateExceptionCommand, RelativeSource={RelativeSource AncestorType=Window}}">
-                
-                    <MenuItem.CommandParameter>
-                    
-                        <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="SimulateException:TimeOut">
-                            <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                        </MultiBinding>
-                    
-                    </MenuItem.CommandParameter>
-                    
-                    <MenuItem.Style>
-                
-                        <Style TargetType="MenuItem">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.Tag.SimulateException, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="TimeOut">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-        
-                    </MenuItem.Style>
-                </MenuItem>
             </MenuItem>
         </ContextMenu>
         
@@ -185,6 +121,12 @@
         <!-- TreeView Sidebar -->
         <ScrollViewer Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto" Grid.RowSpan="2">
             <TreeView x:Name="treeView" ItemsSource="{Binding RootNodes}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectedItemChanged">
+                        <i:InvokeCommandAction Command="{Binding TreeNodeSelectedCommand}" 
+                               CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
                         <Setter Property="ContextMenu" Value="{StaticResource TreeViewItemContextMenu}"/>

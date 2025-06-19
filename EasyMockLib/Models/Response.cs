@@ -11,6 +11,6 @@ namespace EasyMockLib.Models
     {
         public Body ResponseBody { get; set; }
         public HttpStatusCode StatusCode { get; set; }
-        public int Delayms { get; set; }
+        public int Delay { get; set; }
     }
 }

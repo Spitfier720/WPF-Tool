@@ -44,7 +44,7 @@ namespace WPF_Tool
             {
                 throw new ArgumentNullException(nameof(elementPath));
             }
-            var elementNames = elementPath.Split('/');
+            var elementNames = elementPath.Trim().Split('/');
             var elementsLevel1 = root.Descendants().Where(e => e.Name.LocalName.Equals(elementNames[0], StringComparison.OrdinalIgnoreCase));
             foreach (var element in elementsLevel1)
             {

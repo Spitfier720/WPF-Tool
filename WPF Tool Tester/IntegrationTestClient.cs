@@ -30,6 +30,7 @@ class IntegrationTestClient
                             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
                               <soap:Body>
                                 <GetProfileRequest>
+                                  <profileType>Personal</profileType>
                                   <profileId>1000002</profileId>
                                 </GetProfileRequest>
                               </soap:Body>

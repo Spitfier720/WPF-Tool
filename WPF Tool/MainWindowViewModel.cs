@@ -1,6 +1,7 @@
 ﻿using EasyMockLib;
 using EasyMockLib.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Configuration;
@@ -24,12 +25,11 @@ namespace WPF_Tool
         Dictionary<string, Dictionary<string, List<string>>> soapServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("SoapServiceMatchingConfig.json"));
         public ObservableCollection<TreeNode> RootNodes { get; } = new();
         public ICommand MockNodeContextMenuCommand { get; }
-        public ICommand SimulateExceptionCommand { get; }
         public ICommand ClearLogCommand { get; }
         public ICommand LoadMockFileCommand { get; }
         public ICommand StartServiceCommand { get; }
         public ICommand StopServiceCommand { get; }
-        // public ICommand TreeNodeSelectedCommand { get; }
+        public ICommand TreeNodeSelectedCommand { get; }
         private readonly IFileDialogService _fileDialogService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -104,6 +104,66 @@ namespace WPF_Tool
                     nodes = (List<MockNode>)serializer.Deserialize(xml);
                 }
 
+                // Assign ContentObject for each node's request and response body
+                foreach (var node in nodes)
+                {
+                    // Handle RequestBody
+                    if (node.Request?.RequestBody?.Content != null)
+                    {
+                        var content = node.Request.RequestBody.Content.Trim();
+                        if (node.Request.RequestType == ServiceType.REST)
+                        {
+                            try
+                            {
+                                node.Request.RequestBody.ContentObject = JToken.Parse(content);
+                            }
+                            catch
+                            {
+                                node.Request.RequestBody.ContentObject = null;
+                            }
+                        }
+                        else if (node.Request.RequestType == ServiceType.SOAP)
+                        {
+                            try
+                            {
+                                node.Request.RequestBody.ContentObject = XElement.Parse(content);
+                            }
+                            catch
+                            {
+                                node.Request.RequestBody.ContentObject = null;
+                            }
+                        }
+                    }
+
+                    // Handle ResponseBody
+                    if (node.Response?.ResponseBody?.Content != null)
+                    {
+                        var content = node.Response.ResponseBody.Content.Trim();
+                        if (node.Request.RequestType == ServiceType.REST)
+                        {
+                            try
+                            {
+                                node.Response.ResponseBody.ContentObject = JToken.Parse(content);
+                            }
+                            catch
+                            {
+                                node.Response.ResponseBody.ContentObject = null;
+                            }
+                        }
+                        else if (node.Request.RequestType == ServiceType.SOAP)
+                        {
+                            try
+                            {
+                                node.Response.ResponseBody.ContentObject = XElement.Parse(content);
+                            }
+                            catch
+                            {
+                                node.Response.ResponseBody.ContentObject = null;
+                            }
+                        }
+                    }
+                }
+
                 var mockFileNode = new MockFileNode(restServiceMatchingConfig, soapServiceMatchingConfig)
                 {
                     MockFile = file,
@@ -114,7 +174,6 @@ namespace WPF_Tool
             }
 
             MockNodeContextMenuCommand = new RelayCommand<object>(OnMockNodeContextMenuAction);
-            SimulateExceptionCommand = new RelayCommand<object>(OnSimulateException);
             ClearLogCommand = new RelayCommand<object>(_ =>
             {
                 _logText.Clear();
@@ -123,7 +182,7 @@ namespace WPF_Tool
             LoadMockFileCommand = new RelayCommand<object>(_ => LoadMockFile());
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
             StopServiceCommand = new RelayCommand<object>(_ => StopWebServer(), _ => CanStopService);
-            // TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
+            TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
             _fileDialogService = fileDialogService;
         }
         private void LoadMockFile()
@@ -199,29 +258,8 @@ namespace WPF_Tool
                             AppendOutput(Environment.NewLine);
                         }
                         AppendOutput(Environment.NewLine);
-                        if (!string.IsNullOrEmpty(mock.SimulateException))
-                        {
-                            if (mock.SimulateException == SimulateExceptionInternalServerError)
-                            {
-                                OutputResponseContent("", HttpStatusCode.InternalServerError, context, response);
-                            }
-                            else if (mock.SimulateException == SimulateExceptionNotFound)
-                            {
-                                OutputResponseContent("", HttpStatusCode.NotFound, context, response);
-                            }
-                            else if (mock.SimulateException == SimulateExceptionTimeOut)
-                            {
-                                Thread.Sleep(SERVICE_TIMEOUT_IN_SECONDS * 1000);
-                                return;
-                            }
-                        }
-                        else if (mock.Response == null)
-                        {
-                            // No response received, do not send back anything to simulate timeout scenario
-                            Thread.Sleep(SERVICE_TIMEOUT_IN_SECONDS * 1000);
-                            return;
-                        }
-                        else if (mock.Response.StatusCode == HttpStatusCode.OK)
+                        Thread.Sleep(mock.Response.Delay * 1000);
+                        if (mock.Response.StatusCode == HttpStatusCode.OK)
                         {
                             OutputMockResponse(mock, context, response);
                             if (mock.Request.RequestType == ServiceType.REST)
@@ -360,76 +398,51 @@ namespace WPF_Tool
             if (selectedNode is MockTreeNode treeNode)
             {
                 IsMockFileSelected = treeNode.NodeType == NodeTypes.MockFile;
+                Console.WriteLine("Is Mock File Selected: " + IsMockFileSelected);
 
                 if (treeNode.NodeType == NodeTypes.MockItem)
                 {
                     var node = treeNode.Tag as MockNode;
 
-                    if (node?.Request.RequestType == ServiceType.SOAP)
-                    {
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
-                    }
-                    else
-                    {
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.MethodName} {node.Url} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
-                        AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
-                    }
+                    //if (node?.Request.RequestType == ServiceType.SOAP)
+                    //{
+                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
+                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
+                    //}
+                    //else
+                    //{
+                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.MethodName} {node.Url} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
+                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
+                    //}
 
-                    if (node.Response != null)
-                    {
-                        if (node.Response.StatusCode != HttpStatusCode.OK)
-                        {
-                            AppendOutput(node.Response.StatusCode + "\r\n\r\n");
-                            if (node.Response.ResponseBody.Content != null)
-                            {
-                                AppendOutput(node.Response.ResponseBody.Content + "\r\n\r\n");
-                            }
-                        }
-                        else
-                        {
-                            AppendOutput(node.Response.ResponseBody.Content + "\r\n\r\n");
-                        }
-                    }
+                    //if (node.Response != null)
+                    //{
+                    //    if (node.Response.StatusCode != HttpStatusCode.OK)
+                    //    {
+                    //        AppendOutput(node.Response.StatusCode + "\r\n\r\n");
+                    //        if (node.Response.ResponseBody.Content != null)
+                    //        {
+                    //            AppendOutput(node.Response.ResponseBody.Content + "\r\n\r\n");
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        AppendOutput(node.Response.ResponseBody.Content + "\r\n\r\n");
+                    //    }
+                    //}
                 }
             }
         }
 
         private void SaveMock(MockTreeNode root)
         {
-            using (StreamWriter writer = new StreamWriter((root.Tag as MockFileNode).MockFile))
+            var mockFileNode = root.Tag as MockFileNode;
+            if (mockFileNode != null)
             {
-                foreach (MockTreeNode treeNode in RootNodes)
+                var serializer = new XmlSerializer(typeof(List<MockNode>));
+                using (var writer = new StreamWriter(mockFileNode.MockFile))
                 {
-                    var node = treeNode.Tag as MockNode;
-                    if (node?.Request.RequestType == ServiceType.REST)
-                    {
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.MethodName} {node.Url} Request");
-                        writer.WriteLine($"RequestBody: {node.Request.RequestBody.Content}");
-                        writer.WriteLine();
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.MethodName} {node.Url} Response");
-                        if (node.Response.StatusCode == HttpStatusCode.OK)
-                        {
-                            writer.WriteLine($"ResponseBody: {node.Response.ResponseBody.Content}");
-                        }
-                        else
-                        {
-                            writer.WriteLine($"StatusCode:{node.Response.StatusCode}");
-                        }
-                        writer.WriteLine();
-                    }
-                    else
-                    {
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Url} {node.MethodName} Request");
-                        if (!node.MethodName.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
-                        {
-                            writer.WriteLine(node.Request.RequestBody.Content);
-                        }
-                        writer.WriteLine();
-                        writer.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")} {node.Url} {node.MethodName} Response");
-                        writer.WriteLine(node.Response.ResponseBody.Content);
-                        writer.WriteLine();
-                    }
+                    serializer.Serialize(writer, mockFileNode.Nodes);
                 }
             }
         }
@@ -454,14 +467,65 @@ namespace WPF_Tool
                         {
                             MethodName = vm.MethodName,
                             Url = vm.Url,
-                            // ... set other properties, including Request/Response, etc.
+                            Description = vm.Description,
+                            Request = new Request
+                            {
+                                ServiceName = vm.Service,
+                                RequestBody = new Body
+                                {
+                                    Content = vm.RequestBody
+                                }
+                            },
+                            Response = new Response
+                            {
+                                ResponseBody = new Body
+                                {
+                                    Content = vm.ResponseBody
+                                },
+                                StatusCode = Enum.TryParse(vm.ResponseStatusCode, out HttpStatusCode status) ? status : HttpStatusCode.OK,
+                                Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0
+                            }
                         };
                         // Find the correct parent (service) and add the new node
                         if (node.Tag is MockFileNode existingFileNode)
                         {
                             existingFileNode.Nodes.Add(newMockNode);
-                            // Optionally, update the UI tree as well
                             node.Children.Add(new MockTreeNode(newMockNode) { Parent = node });
+                        }
+                    }
+                    break;
+
+                case "Edit":
+                    if (node.Tag is MockNode mockNodeToEdit)
+                    {
+                        // Create and pre-fill the editor ViewModel
+                        var vm = new MockNodeEditorViewModel
+                        {
+                            Service = mockNodeToEdit.Request.ServiceName,
+                            MethodName = mockNodeToEdit.MethodName,
+                            Url = mockNodeToEdit.Url,
+                            RequestBody = mockNodeToEdit.Request.RequestBody?.Content,
+                            ResponseBody = mockNodeToEdit.Response.ResponseBody?.Content,
+                            ResponseDelay = mockNodeToEdit.Response.Delay.ToString(),
+                            ResponseStatusCode = mockNodeToEdit.Response.StatusCode.ToString(),
+                            Description = mockNodeToEdit.Description
+                        };
+
+                        var mockNodeEditor = new MockNodeEditorWindow();
+                        mockNodeEditor.DataContext = vm;
+
+                        if (mockNodeEditor.ShowDialog() == true)
+                        {
+                            // Update the existing MockNode with edited values
+                            mockNodeToEdit.Request.ServiceName = vm.Service;
+                            mockNodeToEdit.MethodName = vm.MethodName;
+                            mockNodeToEdit.Url = vm.Url;
+                            mockNodeToEdit.Request.RequestBody.Content = vm.RequestBody;
+                            mockNodeToEdit.Response.ResponseBody.Content = vm.ResponseBody;
+                            mockNodeToEdit.Response.Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0;
+                            mockNodeToEdit.Response.StatusCode = Enum.TryParse(vm.ResponseStatusCode, out HttpStatusCode status) ? status : HttpStatusCode.OK;
+                            mockNodeToEdit.Description = vm.Description;
+                            // Notify UI if needed
                         }
                     }
                     break;
@@ -512,28 +576,6 @@ namespace WPF_Tool
                 case "Save":
                     SaveMock(node);
                     break;
-            }
-        }
-
-        private void OnSimulateException(object parameter)
-        {
-            if (parameter is not Tuple<string, MockTreeNode> ctxParam)
-                return;
-
-            var exceptionText = ctxParam.Item1;
-            var node = ctxParam.Item2;
-
-            if (node?.Tag is not MockNode mockNode)
-                return;
-
-            // Toggle the exception
-            if (mockNode.SimulateException == exceptionText)
-            {
-                mockNode.SimulateException = string.Empty;
-            }
-            else
-            {
-                mockNode.SimulateException = exceptionText;
             }
         }
 

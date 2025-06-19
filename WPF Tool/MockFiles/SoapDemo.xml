@@ -3,6 +3,8 @@
 		<Url>ProfileService</Url>
 		<MethodName>GetProfile</MethodName>
 		<Request>
+			<ServiceName>ProfileService</ServiceName>
+			<RequestType>SOAP</RequestType>
 			<RequestBody>
 				<Content>
 					<![CDATA[
@@ -59,12 +61,15 @@
 			</ResponseBody>
 			<Delayms>0</Delayms>
 		</Response>
+		<Description></Description>
 	</MockNode>
 	<MockNode>
 		<Url>ProfileService</Url>
 		<MethodName>GetProfile</MethodName>
 		<Request>
-			<Requestbody>
+			<ServiceName>ProfileService</ServiceName>
+			<RequestType>SOAP</RequestType>
+			<RequestBody>
 				<Content>
 					<![CDATA[
 						<?xml version="1.0" encoding="UTF-8"?>
@@ -85,7 +90,7 @@
 						</soap:Envelope>
 					]]>
 				</Content>
-			</Requestbody>
+			</RequestBody>
 		</Request>
 		<Response>
 			<StatusCode>OK</StatusCode>
@@ -120,5 +125,6 @@
 			</ResponseBody>
 			<Delayms>0</Delayms>
 		</Response>
+		<Description></Description>
 	</MockNode>
 </ArrayOfMockNode>

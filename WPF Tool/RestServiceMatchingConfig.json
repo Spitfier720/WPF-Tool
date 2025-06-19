@@ -1,9 +1,9 @@
 {
-  "/Countries": {
+  "Countries": {
     "GET": [],
     "POST": [ "countryRequest.code" ]
   },
-  "/Countries/Details": {
+  "Countries/Details": {
     "POST": [
       "countryRequest.code",
       "countryRequest.details.population",

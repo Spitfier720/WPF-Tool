@@ -1,8 +1,11 @@
 ﻿<ArrayOfMockNode>
 	<MockNode>
 		<MethodName>GET</MethodName>
-		<Url>/Countries</Url>
-		<Request></Request>
+		<Url>Countries</Url>
+		<Request>
+			<ServiceName>Countries</ServiceName>
+			<RequestType>REST</RequestType>
+		</Request>
 		<Response>
 			<StatusCode>OK</StatusCode>
 			<ResponseBody>
@@ -991,11 +994,14 @@
 			</ResponseBody>
 			<Delayms>0</Delayms>
 		</Response>
+		<Description></Description>
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>/Countries</Url>
+		<Url>Countries</Url>
 		<Request>
+			<ServiceName>Countries</ServiceName>
+			<RequestType>REST</RequestType>
 			<RequestBody>
 				<Content>
 					<![CDATA[
@@ -1022,12 +1028,16 @@
 			</ResponseBody>
 			<Delayms>0</Delayms>
 		</Response>
+		<Description></Description>
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>/Countries</Url>
+		<Url>Countries</Url>
 		<Request>
+			<ServiceName>Countries</ServiceName>
+			<RequestType>REST</RequestType>
 			<RequestBody>
+
 				<Content>
 					<![CDATA[
 					    {"countryRequest":{"code":"US"}}
@@ -1049,11 +1059,14 @@
 			</ResponseBody>
 			<Delayms>0</Delayms>
 		</Response>
+		<Description></Description>
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>/Countries/Details</Url>
+		<Url>Countries/Details</Url>
 		<Request>
+			<ServiceName>Countries</ServiceName>
+			<RequestType>REST</RequestType>
 			<RequestBody>
 				<Content>
 					<![CDATA[
@@ -1096,11 +1109,14 @@
 			</ResponseBody>
 			<Delayms>0</Delayms>
 		</Response>
+		<Description></Description>
 	</MockNode>
     <MockNode>
 		<MethodName>POST</MethodName>
-		<Url>/Countries/Details</Url>
+		<Url>Countries/Details</Url>
 		<Request>
+			<ServiceName>Countries</ServiceName>
+			<RequestType>REST</RequestType>
 			<RequestBody>
 				<Content>
 					<![CDATA[
@@ -1131,7 +1147,7 @@
 						    "name": "Germany",
 						    "code": "DE",
 						    "population": 83000000,
-						    "languages": ["German"],/
+						    "languages": ["German"],
 						    "region": {
 							    "name": "Europe",
 							    "subregions": ["Western Europe"]
@@ -1143,5 +1159,6 @@
 			</ResponseBody>
 			<Delayms>0</Delayms>
 		</Response>
+		<Description></Description>
 	</MockNode>
 </ArrayOfMockNode>
