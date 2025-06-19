@@ -59,7 +59,7 @@
 					]]>
 				</Content>
 			</ResponseBody>
-			<Delayms>0</Delayms>
+			<Delay>0</Delay>
 		</Response>
 		<Description></Description>
 	</MockNode>
@@ -123,7 +123,7 @@
 					]]>
 				</Content>
 			</ResponseBody>
-			<Delayms>0</Delayms>
+			<Delay>0</Delay>
 		</Response>
 		<Description></Description>
 	</MockNode>

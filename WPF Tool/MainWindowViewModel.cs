@@ -258,7 +258,9 @@ namespace WPF_Tool
                             AppendOutput(Environment.NewLine);
                         }
                         AppendOutput(Environment.NewLine);
+                        AppendOutput($"Sleeping for {mock.Response.Delay} seconds...{Environment.NewLine}");
                         Thread.Sleep(mock.Response.Delay * 1000);
+                        AppendOutput($"Woke up at {DateTime.Now:HH:mm:ss.fff}{Environment.NewLine}");
                         if (mock.Response.StatusCode == HttpStatusCode.OK)
                         {
                             OutputMockResponse(mock, context, response);
