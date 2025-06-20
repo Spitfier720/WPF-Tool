@@ -19,7 +19,7 @@ namespace WPF_Tool_Unit_Testing
                 }
             };
             var soapConfig = new Dictionary<string, Dictionary<string, List<string>>>();
-            var mockFileNode = new MockFileNode(restConfig, soapConfig);
+            var mockFileNode = new MockFileNode();
 
             // Create two mock nodes with different request bodies
             var mock1 = new MockNode
@@ -93,7 +93,7 @@ namespace WPF_Tool_Unit_Testing
                     ["GetProfile"] = new() { "profileId" }
                 }
             };
-            var mockFileNode = new MockFileNode(restConfig, soapConfig);
+            var mockFileNode = new MockFileNode();
 
             // SOAP request for profileId 1000001
             string request1 = @"<?xml version=""1.0"" encoding=""UTF-8""?>

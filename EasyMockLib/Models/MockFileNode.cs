@@ -14,19 +14,15 @@ namespace EasyMockLib.Models
 {
     public class MockFileNode
     {
-        public MockFileNode(
-            Dictionary<string, Dictionary<string, List<string>>> restConfig,
-            Dictionary<string, Dictionary<string, List<string>>> soapConfig)
+        public MockFileNode()
         {
             Nodes = new List<MockNode>();
-            RestServiceMatchingConfig = restConfig;
-            SoapServiceMatchingConfig = soapConfig;
         }
 
         public string MockFile { get; set; }
         public List<MockNode> Nodes { get; set; }
-        public Dictionary<string, Dictionary<string, List<string>>> RestServiceMatchingConfig { get; }
-        public Dictionary<string, Dictionary<string, List<string>>> SoapServiceMatchingConfig { get; }
+        public Dictionary<string, Dictionary<string, List<string>>> RestServiceMatchingConfig { get; set; }
+        public Dictionary<string, Dictionary<string, List<string>>> SoapServiceMatchingConfig { get; set; }
 
 
         public MockNode GetMock(ServiceType serviceType, string service, 

@@ -20,7 +20,6 @@ namespace WPF_Tool
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private readonly int SERVICE_TIMEOUT_IN_SECONDS = int.Parse(ConfigurationManager.AppSettings["ServiceTimeoutInSeconds"]);
         Dictionary<string, Dictionary<string, List<string>>> restServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("RestServiceMatchingConfig.json"));
         Dictionary<string, Dictionary<string, List<string>>> soapServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("SoapServiceMatchingConfig.json"));
         public ObservableCollection<TreeNode> RootNodes { get; } = new();
@@ -164,10 +163,12 @@ namespace WPF_Tool
                     }
                 }
 
-                var mockFileNode = new MockFileNode(restServiceMatchingConfig, soapServiceMatchingConfig)
+                var mockFileNode = new MockFileNode()
                 {
                     MockFile = file,
-                    Nodes = nodes
+                    Nodes = nodes,
+                    RestServiceMatchingConfig = restServiceMatchingConfig,
+                    SoapServiceMatchingConfig = soapServiceMatchingConfig
                 };
 
                 RootNodes.Add(new MockTreeNode(mockFileNode));
@@ -189,9 +190,59 @@ namespace WPF_Tool
         {
             var filePath = _fileDialogService.OpenFile("XML Files (*.xml)|*.xml");
             if (string.IsNullOrEmpty(filePath)) return;
-            //var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
-            //var mock = parser.Parse(filePath);
-            //RootNodes.Add(new MockTreeNode(mock));
+
+            var serializer = new XmlSerializer(typeof(List<MockNode>));
+            List<MockNode> nodes;
+            using (var xml = File.OpenRead(filePath))
+            {
+                nodes = (List<MockNode>)serializer.Deserialize(xml);
+            }
+
+            // Assign ContentObject for each node's request and response body
+            foreach (var node in nodes)
+            {
+                // Handle RequestBody
+                if (node.Request?.RequestBody?.Content != null)
+                {
+                    var content = node.Request.RequestBody.Content.Trim();
+                    if (node.Request.RequestType == ServiceType.REST)
+                    {
+                        try { node.Request.RequestBody.ContentObject = JToken.Parse(content); }
+                        catch { node.Request.RequestBody.ContentObject = null; }
+                    }
+                    else if (node.Request.RequestType == ServiceType.SOAP)
+                    {
+                        try { node.Request.RequestBody.ContentObject = XElement.Parse(content); }
+                        catch { node.Request.RequestBody.ContentObject = null; }
+                    }
+                }
+
+                // Handle ResponseBody
+                if (node.Response?.ResponseBody?.Content != null)
+                {
+                    var content = node.Response.ResponseBody.Content.Trim();
+                    if (node.Request.RequestType == ServiceType.REST)
+                    {
+                        try { node.Response.ResponseBody.ContentObject = JToken.Parse(content); }
+                        catch { node.Response.ResponseBody.ContentObject = null; }
+                    }
+                    else if (node.Request.RequestType == ServiceType.SOAP)
+                    {
+                        try { node.Response.ResponseBody.ContentObject = XElement.Parse(content); }
+                        catch { node.Response.ResponseBody.ContentObject = null; }
+                    }
+                }
+            }
+
+            var mockFileNode = new MockFileNode()
+            {
+                MockFile = filePath,
+                Nodes = nodes,
+                RestServiceMatchingConfig = restServiceMatchingConfig,
+                SoapServiceMatchingConfig = soapServiceMatchingConfig
+            };
+
+            RootNodes.Add(new MockTreeNode(mockFileNode));
         }
 
         private void StartWebServer()
