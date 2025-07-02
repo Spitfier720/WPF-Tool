@@ -138,11 +138,20 @@
         <!-- Main Content Area -->
         <Grid Grid.Row="1" Grid.Column="1">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                <TextBlock Text="{Binding LogText}"
-               TextWrapping="Wrap"
-               VerticalAlignment="Top"
-               HorizontalAlignment="Stretch"
-               Margin="8"/>
+                <ItemsControl ItemsSource="{Binding RequestResponsePairs}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Expander Margin="4" Header="{Binding RequestSummary}">
+                                <StackPanel>
+                                    <TextBlock Text="Request:" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBox Text="{Binding RequestBody}" IsReadOnly="True" TextWrapping="Wrap" Background="#F7F7F7" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding ResponseSummary}" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBox Text="{Binding ResponseBody}" IsReadOnly="True" TextWrapping="Wrap" Background="#FFFBEA"/>
+                                </StackPanel>
+                            </Expander>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </ScrollViewer>
         </Grid>
     </Grid>

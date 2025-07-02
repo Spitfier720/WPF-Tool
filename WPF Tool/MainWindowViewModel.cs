@@ -23,6 +23,7 @@ namespace WPF_Tool
         Dictionary<string, Dictionary<string, List<string>>> restServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("RestServiceMatchingConfig.json"));
         Dictionary<string, Dictionary<string, List<string>>> soapServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("SoapServiceMatchingConfig.json"));
         public ObservableCollection<TreeNode> RootNodes { get; } = new();
+        public ObservableCollection<RequestResponsePair> RequestResponsePairs { get; } = new();
         public ICommand MockNodeContextMenuCommand { get; }
         public ICommand ClearLogCommand { get; }
         public ICommand LoadMockFileCommand { get; }
@@ -260,7 +261,7 @@ namespace WPF_Tool
             {
                 listener.Prefixes.Add("http://localhost:8080/");
                 listener.Start();
-                AppendOutput($"Mock service started.\n");
+                //AppendOutput($"Mock service started.\n");
                 Application.Current.Dispatcher.Invoke(() => IsServiceRunning = true);
 
                 while (!tokenSource.IsCancellationRequested)
@@ -280,7 +281,7 @@ namespace WPF_Tool
 
         public void StopWebServer()
         {
-            AppendOutput($"Mock service stopped.{Environment.NewLine}");
+            //AppendOutput($"Mock service stopped.{Environment.NewLine}");
             Application.Current.Dispatcher.Invoke(() => IsServiceRunning = false);
             tokenSource?.Cancel();
         }
@@ -295,66 +296,26 @@ namespace WPF_Tool
 
                     if (mock != null)
                     {
-                        //AppendOutput($"From file {mock.Parent.Text}{Environment.NewLine}");
-                        if (mock.Request.RequestType == ServiceType.REST)
-                        {
-                            AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {method} {context.Request.Url.AbsoluteUri} Request{Environment.NewLine}");
-                            AppendOutput($"RequestBody: {requestContent}");
-                            AppendOutput(Environment.NewLine);
-                        }
-                        else
-                        {
-                            AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {context.Request.Url.AbsoluteUri} {method} Request{Environment.NewLine}");
-                            AppendOutput($"{requestContent}");
-                            AppendOutput(Environment.NewLine);
-                        }
-                        AppendOutput(Environment.NewLine);
-                        AppendOutput($"Sleeping for {mock.Response.Delay} seconds...{Environment.NewLine}");
+                        string requestSummary = $"{method} {context.Request.Url.AbsoluteUri}";
+                        string requestBody = requestContent;
+                        string responseSummary = $"StatusCode: {mock.Response.StatusCode}";
+                        string responseBody = mock.Response.ResponseBody?.Content ?? string.Empty;
+
                         Thread.Sleep(mock.Response.Delay * 1000);
-                        AppendOutput($"Woke up at {DateTime.Now:HH:mm:ss.fff}{Environment.NewLine}");
-                        if (mock.Response.StatusCode == HttpStatusCode.OK)
-                        {
-                            OutputMockResponse(mock, context, response);
-                            if (mock.Request.RequestType == ServiceType.REST)
-                            {
-                                AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {method} {context.Request.Url.AbsoluteUri} Response{Environment.NewLine}");
-                                AppendOutput($"ResponseBody: {mock.Response.ResponseBody.Content}");
-                            }
-                            else
-                            {
-                                AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {context.Request.Url.AbsoluteUri} {method} Response{Environment.NewLine}");
-                                AppendOutput($"{mock.Response.ResponseBody.Content}");
-                            }
-                            AppendOutput(Environment.NewLine + Environment.NewLine);
-                        }
-                        else
-                        {
-                            if (mock.Response.ResponseBody != null)
-                            {
-                                OutputMockResponse(mock, context, response);
-                            }
-                            if (mock.Request.RequestType == ServiceType.REST)
-                            {
-                                AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {method} {context.Request.Url.AbsoluteUri} Response{Environment.NewLine}");
-                                AppendOutput($"StatusCode: {mock.Response.StatusCode}");
-                            }
-                            else
-                            {
-                                AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {context.Request.Url.AbsoluteUri} {method} Response{Environment.NewLine}");
-                                AppendOutput($"StatusCode: {mock.Response.StatusCode}");
-                            }
-                            AppendOutput(Environment.NewLine + Environment.NewLine);
-                        }
+                        OutputMockResponse(mock, context, response);
+
+                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody);
                     }
                     else
                     {
-                        AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {context.Request.Url.AbsoluteUri} {method} Request{Environment.NewLine}");
-                        AppendOutput($"{requestContent}");
-                        AppendOutput(Environment.NewLine + Environment.NewLine);
-                        AppendOutput($"{DateTime.Now.ToString("HH:mm:ss.fff")} {context.Request.Url.AbsoluteUri} {method} Response{Environment.NewLine}");
-                        AppendOutput($"StatusCode: {HttpStatusCode.NotFound}");
-                        AppendOutput(Environment.NewLine + Environment.NewLine);
+                        string requestSummary = $"{method} {context.Request.Url.AbsoluteUri}";
+                        string requestBody = requestContent;
+                        string responseSummary = $"StatusCode: {HttpStatusCode.NotFound}";
+                        string responseBody = string.Empty;
+
                         response.StatusCode = (int)HttpStatusCode.NotFound;
+
+                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody);
                     }
                 }
                 catch (Exception e)
@@ -364,6 +325,14 @@ namespace WPF_Tool
                     var buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(e));
                     response.ContentLength64 = buffer.Length;
                     response.OutputStream.Write(buffer, 0, buffer.Length);
+
+                    // Optionally log the exception as a request/response pair
+                    AddRequestResponsePair(
+                        "Exception",
+                        "",
+                        "StatusCode: 500",
+                        e.ToString()
+                    );
                 }
             }
         }
@@ -635,6 +604,20 @@ namespace WPF_Tool
         private void AppendOutput(string text) {
             _logText.Append(text);
             OnPropertyChanged(nameof(LogText));
+        }
+
+        public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                RequestResponsePairs.Add(new RequestResponsePair
+                {
+                    RequestSummary = requestSummary,
+                    RequestBody = requestBody,
+                    ResponseSummary = responseSummary,
+                    ResponseBody = responseBody
+                });
+            });
         }
     }
 }
