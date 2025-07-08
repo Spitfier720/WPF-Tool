@@ -78,26 +78,21 @@ namespace EasyMockLib
 
         private (string MethodName, string Url, Request Request) ProcessSoapRequest(StreamReader reader, Match m, string line)
         {
-            var url = m.Groups[2].Value;
-            var methodName = m.Groups[1].Value;
+            var url = m.Groups[1].Value;
+            var methodName = m.Groups[2].Value;
             Request req = new Request()
             {
                 RequestType = ServiceType.SOAP,
                 ServiceName = m.Groups[1].Value.Substring(m.Groups[1].Value.LastIndexOf('/') + 1),
             };
             req.RequestBody = ReadSoapBlock(reader, line);
-            methodName = GetSoapAction(req.RequestBody.Content);
             return (methodName, url, req);
         }
-        private string GetSoapAction(string soapEnv)
-        {
-            XDocument doc = XDocument.Parse(soapEnv);
-            return Regex.Replace(doc.Descendants(soap + "Body").First().Elements().First().Name.LocalName, "Request$", "");
-        }
+
         private MockNode ProcessSoapResponse(StreamReader reader, Match m, List<(string MethodName, string Url, Request Request)> pendingRequests, string line)
         {
-            var url = m.Groups[2].Value;
-            var methodName = m.Groups[1].Value;
+            var url = m.Groups[1].Value;
+            var methodName = m.Groups[2].Value;
             var requestTuple = pendingRequests.LastOrDefault(r => r.Url == url && r.MethodName == methodName);
             var response = new Response() { StatusCode = HttpStatusCode.OK, ResponseBody = new Body() };
             response.ResponseBody = ReadSoapBlock(reader, line);

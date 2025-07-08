@@ -10,10 +10,10 @@ namespace MockTxtToXmlConverter
     public class Options
     {
         [Option('i', "input", Required = true, HelpText = "Input file path.")]
-        public string InputFilePath { get; set; }
+        public string InputFilePath { get; set; } = string.Empty;
 
         [Option('o', "output", Required = false, HelpText = "Output file path.")]
-        public string OutputFilePath { get; set; }
+        public string OutputFilePath { get; set; } = string.Empty;
     }
     class Program
     {

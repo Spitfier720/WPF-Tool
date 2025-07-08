@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MockTxtToXmlConverter": {
+      "commandName": "Project",
+      "commandLineArgs": "-i \".\\TestMockFiles\"\r\n-o \".\\TestMockFiles\""
+    }
+  }
+}
