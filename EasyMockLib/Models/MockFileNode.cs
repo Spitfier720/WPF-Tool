@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using WPF_Tool;
 
 namespace EasyMockLib.Models
 {
@@ -21,13 +20,9 @@ namespace EasyMockLib.Models
 
         public string MockFile { get; set; }
         public List<MockNode> Nodes { get; set; }
-        public Dictionary<string, Dictionary<string, List<string>>> RestServiceMatchingConfig { get; set; }
-        public Dictionary<string, Dictionary<string, List<string>>> SoapServiceMatchingConfig { get; set; }
-
 
         public MockNode GetMock(ServiceType serviceType, string service, 
-            string method, string requestContent, 
-            Dictionary<string, Dictionary<string, List<string>>> soapMatchingElements)
+            string method, string requestContent, IMatchingPolicy matchingPolicy)
         {
             var mocks = this.Nodes.Where(m =>
             m.Request.RequestType == serviceType &&
@@ -40,82 +35,18 @@ namespace EasyMockLib.Models
                 {
                     return mocks.ElementAt(0);
                 }
-                if (serviceType == ServiceType.REST)
+
+                MockNode? matchingMock = matchingPolicy.Apply(requestContent, mocks, service, method);
+                if (matchingMock != null)
                 {
-                    if(RestServiceMatchingConfig.ContainsKey(service) &&
-                       RestServiceMatchingConfig[service].ContainsKey(method) &&
-                       RestServiceMatchingConfig[service][method].Count() > 0)
-                    {
-                        var restMatchingPolicy = new RestRequestValueMatchingPolicy();
-                        var mock = restMatchingPolicy.Apply(requestContent, mocks, RestServiceMatchingConfig[service][method]);
-                        if (mock != null)
-                        {
-                            return mock;
-                        }
-                    }
-
-                    IMatchingPolicy matchingPolicy;
-                    if (method.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        matchingPolicy = new HttpGetMatchingPolicy();
-                        return matchingPolicy.Apply(service, mocks);
-                    }
-                    JObject jRequest = JObject.Parse(requestContent);
-                    foreach (var mock in mocks)
-                    {
-                        if (JToken.DeepEquals(jRequest, (JObject)mock.Request.RequestBody.ContentObject))
-                        {
-                            return mock;
-                        }
-                    }
-                    return mocks.FirstOrDefault();
+                    return matchingMock;
                 }
-                else if (serviceType == ServiceType.SOAP)
+
+                else
                 {
-
-                    if (SoapServiceMatchingConfig.ContainsKey(service) &&
-                        SoapServiceMatchingConfig[service].ContainsKey(method) &&
-                        SoapServiceMatchingConfig[service][method].Count() > 0)
-                    {
-                        var soapMatchingPolicy = new SoapRequestValueMatchingPolicy();
-                        var mock = soapMatchingPolicy.Apply(requestContent, mocks, SoapServiceMatchingConfig[service][method]);
-                        if (mock != null)
-                        {
-                            return mock;
-                        }
-                    }
-
-                    XElement xRequestContent = XElement.Parse(requestContent);
-                    List<string> elementsToCompare;
-                    if (soapMatchingElements.ContainsKey(service) && soapMatchingElements[service].ContainsKey(method))
-                    {
-                        elementsToCompare = soapMatchingElements[service][method];
-                    }
-                    else
-                    {
-                        elementsToCompare = new List<string>() { method + "Request" };
-                    }
-                    foreach (var mock in mocks)
-                    {
-                        XElement xMockRequest = (XElement)mock.Request.RequestBody.ContentObject;
-                        bool match = true;
-                        foreach (var elementName in elementsToCompare)
-                        {
-                            var element1 = xRequestContent.Descendants().Where(e => e.Name.LocalName == elementName).FirstOrDefault();
-                            var element2 = xMockRequest.Descendants().Where(e => e.Name.LocalName == elementName).FirstOrDefault();
-                            if (!XNode.DeepEquals(element1, element2))
-                            {
-                                match = false; break;
-                            }
-                        }
-                        if (match)
-                        {
-                            return mock;
-                        }
-                    }
-                    return mocks.FirstOrDefault();
+                    // If no matching mock found, return the first one as a fallback
+                    return mocks.First();
                 }
-                return mocks.First();
             }
             return null;
         }

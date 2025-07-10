@@ -16,7 +16,7 @@ class IntegrationTestClient
         var restGetUrl = baseUrl + "Countries";
         var restBody = @"{
                             ""countryRequest"": {
-                                ""code"": ""XX""
+                                ""code"": ""CA""
                             }
                         }";
         var restContent = new StringContent(restBody, Encoding.UTF8, "application/json");

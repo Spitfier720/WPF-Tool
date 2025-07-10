@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace EasyMockLib.MatchingPolicies
 {
-    internal interface IMatchingPolicy
+    public interface IMatchingPolicy
     {
-        MockNode Apply(string requestContent, IEnumerable<MockNode> mocks);
+        MockNode Apply(string requestContent, IEnumerable<MockNode> mocks, string service, string method);
     }
 }

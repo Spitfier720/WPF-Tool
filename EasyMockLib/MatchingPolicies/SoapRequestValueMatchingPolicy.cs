@@ -7,12 +7,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace WPF_Tool
+namespace EasyMockLib.MatchingPolicies
 {
-    class SoapRequestValueMatchingPolicy
+    public class SoapRequestValueMatchingPolicy : IMatchingPolicy
     {
-        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, List<string> elementsToCompare)
+        public Dictionary<string, Dictionary<string, List<string>>> SoapServiceMatchingConfig { get; set; } = new Dictionary<string, Dictionary<string, List<string>>>();
+
+        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, string service, string method)
         {
+            List<string> elementsToCompare = null;
+
+            if (SoapServiceMatchingConfig.ContainsKey(service) &&
+                        SoapServiceMatchingConfig[service].ContainsKey(method) &&
+                        SoapServiceMatchingConfig[service][method].Count() > 0)
+            {
+                elementsToCompare = SoapServiceMatchingConfig[service][method];
+            }
+            else
+            {
+                return null;
+            }
+
             XElement xRequestContent = XElement.Parse(requestContent);
             foreach (var mock in mocks)
             {

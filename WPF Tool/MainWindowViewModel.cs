@@ -1,4 +1,4 @@
-﻿using EasyMockLib;
+﻿using EasyMockLib.MatchingPolicies;
 using EasyMockLib.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -20,8 +20,16 @@ namespace WPF_Tool
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        Dictionary<string, Dictionary<string, List<string>>> restServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("RestServiceMatchingConfig.json"));
-        Dictionary<string, Dictionary<string, List<string>>> soapServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("SoapServiceMatchingConfig.json"));
+        RestRequestValueMatchingPolicy restMatchPolicy = new RestRequestValueMatchingPolicy()
+        {
+            RestServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("RestServiceMatchingConfig.json"))
+        };
+
+        SoapRequestValueMatchingPolicy soapMatchPolicy = new EasyMockLib.MatchingPolicies.SoapRequestValueMatchingPolicy()
+        {
+           SoapServiceMatchingConfig = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(File.ReadAllText("SoapServiceMatchingConfig.json"))
+        };
+
         public ObservableCollection<TreeNode> RootNodes { get; } = new();
         public ObservableCollection<RequestResponsePair> RequestResponsePairs { get; } = new();
         public ICommand MockNodeContextMenuCommand { get; }
@@ -33,18 +41,6 @@ namespace WPF_Tool
         private readonly IFileDialogService _fileDialogService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        
-        private StringBuilder _logText = new StringBuilder();
-        public string LogText
-        {
-            get => _logText.ToString();
-            set
-            {
-                _logText.Clear();
-                _logText.Append(value);
-                OnPropertyChanged(nameof(LogText));
-            }
-        }
 
         private bool _isMockFileSelected;
         public bool IsMockFileSelected
@@ -107,6 +103,9 @@ namespace WPF_Tool
                 // Assign ContentObject for each node's request and response body
                 foreach (var node in nodes)
                 {
+                    node.Request.RequestBody.Content = Dedent(node.Request.RequestBody.Content ?? string.Empty);
+                    node.Response.ResponseBody.Content = Dedent(node.Response.ResponseBody.Content ?? string.Empty);
+
                     // Handle RequestBody
                     if (node.Request?.RequestBody?.Content != null)
                     {
@@ -167,9 +166,7 @@ namespace WPF_Tool
                 var mockFileNode = new MockFileNode()
                 {
                     MockFile = file,
-                    Nodes = nodes,
-                    RestServiceMatchingConfig = restServiceMatchingConfig,
-                    SoapServiceMatchingConfig = soapServiceMatchingConfig
+                    Nodes = nodes
                 };
 
                 RootNodes.Add(new MockTreeNode(mockFileNode));
@@ -178,8 +175,8 @@ namespace WPF_Tool
             MockNodeContextMenuCommand = new RelayCommand<object>(OnMockNodeContextMenuAction);
             ClearLogCommand = new RelayCommand<object>(_ =>
             {
-                _logText.Clear();
-                OnPropertyChanged(nameof(LogText));
+                RequestResponsePairs.Clear();
+                OnPropertyChanged(nameof(RequestResponsePairs));
             });
             LoadMockFileCommand = new RelayCommand<object>(_ => LoadMockFile());
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
@@ -187,6 +184,19 @@ namespace WPF_Tool
             TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
             _fileDialogService = fileDialogService;
         }
+
+        private static string Dedent(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+            var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            var nonEmptyLines = lines.Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+            if (!nonEmptyLines.Any()) return text.Trim();
+
+            int minIndent = nonEmptyLines.Min(l => l.TakeWhile(char.IsWhiteSpace).Count());
+            var dedented = lines.Select(l => l.Length >= minIndent ? l.Substring(minIndent) : l).ToArray();
+            return string.Join(Environment.NewLine, dedented).Trim();
+        }
+
         private void LoadMockFile()
         {
             var filePath = _fileDialogService.OpenFile("XML Files (*.xml)|*.xml");
@@ -238,9 +248,7 @@ namespace WPF_Tool
             var mockFileNode = new MockFileNode()
             {
                 MockFile = filePath,
-                Nodes = nodes,
-                RestServiceMatchingConfig = restServiceMatchingConfig,
-                SoapServiceMatchingConfig = soapServiceMatchingConfig
+                Nodes = nodes
             };
 
             RootNodes.Add(new MockTreeNode(mockFileNode));
@@ -347,13 +355,13 @@ namespace WPF_Tool
                 // REST request
                 method = context.Request.HttpMethod.ToString();
                 string url = context.Request.HttpMethod == HttpMethod.Get.ToString() ? context.Request.Url.PathAndQuery : context.Request.Url.AbsolutePath.Substring(context.Request.Url.AbsolutePath.LastIndexOf('/') + 1);
-                mock = GetMock(ServiceType.REST, url, method, requestContent);
+                mock = GetMock(ServiceType.REST, url, method, requestContent, restMatchPolicy);
             }
             else if (context.Request.ContentType.StartsWith("text/xml"))
             {
                 // SOAP request
                 method = GetSoapAction(requestContent);
-                mock = GetMock(ServiceType.SOAP, context.Request.Url.AbsolutePath.Substring(context.Request.Url.AbsolutePath.LastIndexOf('/') + 1), method, requestContent);
+                mock = GetMock(ServiceType.SOAP, context.Request.Url.AbsolutePath.Substring(context.Request.Url.AbsolutePath.LastIndexOf('/') + 1), method, requestContent, soapMatchPolicy);
             }
             else
             {
@@ -361,11 +369,11 @@ namespace WPF_Tool
             }
             return (mock, method, requestContent);
         }
-        private MockNode?  GetMock(ServiceType serviceType, string service, string method, string requestContent)
+        private MockNode?  GetMock(ServiceType serviceType, string service, string method, string requestContent, IMatchingPolicy matchingPolicy)
         {
             foreach (var node in RootNodes)
             {
-                var mock = (node.Tag as MockFileNode)?.GetMock(serviceType, service, method, requestContent, soapServiceMatchingConfig);
+                MockNode? mock = (node.Tag as MockFileNode)?.GetMock(serviceType, service, method, requestContent, matchingPolicy);
                 if (mock != null)
                 {
                     return mock;
@@ -599,11 +607,6 @@ namespace WPF_Tool
                     SaveMock(node);
                     break;
             }
-        }
-
-        private void AppendOutput(string text) {
-            _logText.Append(text);
-            OnPropertyChanged(nameof(LogText));
         }
 
         public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody)

@@ -7,13 +7,29 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace WPF_Tool
+namespace EasyMockLib.MatchingPolicies
 {
-    class RestRequestValueMatchingPolicy
+    public class RestRequestValueMatchingPolicy : IMatchingPolicy
     {
-        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, List<string> elementsToCompare)
+        public Dictionary<string, Dictionary<string, List<string>>> RestServiceMatchingConfig { get; set; } = new Dictionary<string, Dictionary<string, List<string>>>();
+
+        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, string service, string method)
         {
-            JObject jIncomingRequest = JObject.Parse(requestContent);
+            List<string> elementsToCompare = null;
+
+            if (RestServiceMatchingConfig.ContainsKey(service) &&
+                       RestServiceMatchingConfig[service].ContainsKey(method) &&
+                       RestServiceMatchingConfig[service][method].Count() > 0)
+            {
+                elementsToCompare = RestServiceMatchingConfig[service][method];
+            }
+
+            else
+            {
+                return null;
+            }
+
+                JObject jIncomingRequest = JObject.Parse(requestContent);
             foreach (var mock in mocks)
             {
                 var jMockRequest = (JObject)mock.Request.RequestBody.ContentObject;

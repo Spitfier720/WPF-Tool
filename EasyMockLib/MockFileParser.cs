@@ -43,36 +43,68 @@ namespace EasyMockLib
                     Match m = Regex.Match(line, DevSoapRequestPattern);
                     if (m.Success)
                     {
-                        pendingRequests.Add(ProcessSoapRequest(reader, m, line));
+                        var soapRequest = ProcessSoapRequest(reader, m, line);
+                        
+                        if(soapRequest.MethodName == null ||
+                            soapRequest.Url == null ||
+                            soapRequest.Request == null)
+                        {
+                            throw new Exception($"Failed to process SOAP request at line {lineNumber} in file {filePath}");
+                        }
+
+                        pendingRequests.Add(soapRequest);
                         continue;
                     }
                     m = Regex.Match(line, DevSoapResponsePattern);
-                    if (m.Success && pendingRequests.Count > 0)
+                    if (m.Success)
                     {
-                        root.Nodes.Add(ProcessSoapResponse(reader, m, pendingRequests, line));
-                        continue;
+                        if (pendingRequests.Count() > 0)
+                        {
+                            root.Nodes.Add(ProcessSoapResponse(reader, m, pendingRequests, line));
+                            continue;
+                        }
+                        else
+                        {
+                            throw new Exception($"Found SOAP response without matching request at line {lineNumber} in file {filePath}");
+                        }
                     }
                     m = Regex.Match(line, DevRestRequestPattern);
                     if (m.Success)
                     {
-                        // Found a REST request
-                        pendingRequests.Add(ProcessRestRequest(reader, m));
+                        var restRequest = ProcessRestRequest(reader, m);
+
+                        if(restRequest.MethodName == null ||
+                            restRequest.Url == null ||
+                            restRequest.Request == null)
+                        {
+                            throw new Exception($"Failed to process REST request at line {lineNumber} in file {filePath}");
+                        }
+
+                        pendingRequests.Add(restRequest);
                         continue;
                     }
                     m = Regex.Match(line, DevRestResponsePattern);
                     if (m.Success)
                     {
-                        // Found a REST response
-                        root.Nodes.Add(ProcessRestResponse(reader, m, pendingRequests));
-                        continue;
+                        if(pendingRequests.Count() > 0)
+                        {
+                            root.Nodes.Add(ProcessRestResponse(reader, m, pendingRequests));
+                            continue;
+                        }
+                        else
+                        {
+                            throw new Exception($"Found REST response without matching request at line {lineNumber} in file {filePath}");
+                        }
                     }
                 }
                 ;
             }
-            foreach (var requestTuple in pendingRequests)
+            
+            if(pendingRequests.Count > 0)
             {
-                root.Nodes.Add(new MockNode() { Request = requestTuple.Request, Response = null });
+                throw new Exception($"Unmatched requests found in file {filePath}");
             }
+
             return root;
         }
 
