@@ -12,8 +12,6 @@ namespace EasyMockLib.Models
         {
             RequestBody = new Body();
         }
-        public ServiceType RequestType { get; set; }
-        public string ServiceName { get; set; }
         public Body RequestBody { get; set; }
     }
 }

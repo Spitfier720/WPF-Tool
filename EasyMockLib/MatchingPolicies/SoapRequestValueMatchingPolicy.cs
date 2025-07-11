@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace EasyMockLib.MatchingPolicies
 {
@@ -13,15 +14,15 @@ namespace EasyMockLib.MatchingPolicies
     {
         public Dictionary<string, Dictionary<string, List<string>>> SoapServiceMatchingConfig { get; set; } = new Dictionary<string, Dictionary<string, List<string>>>();
 
-        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, string service, string method)
+        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, string url, string method)
         {
             List<string> elementsToCompare = null;
 
-            if (SoapServiceMatchingConfig.ContainsKey(service) &&
-                        SoapServiceMatchingConfig[service].ContainsKey(method) &&
-                        SoapServiceMatchingConfig[service][method].Count() > 0)
+            if (SoapServiceMatchingConfig.ContainsKey(url) &&
+                        SoapServiceMatchingConfig[url].ContainsKey(method) &&
+                        SoapServiceMatchingConfig[url][method].Count() > 0)
             {
-                elementsToCompare = SoapServiceMatchingConfig[service][method];
+                elementsToCompare = SoapServiceMatchingConfig[url][method];
             }
             else
             {
@@ -31,7 +32,7 @@ namespace EasyMockLib.MatchingPolicies
             XElement xRequestContent = XElement.Parse(requestContent);
             foreach (var mock in mocks)
             {
-                XElement xMockRequest = (XElement)mock.Request.RequestBody.ContentObject;
+                XElement xMockRequest = XElement.Parse(mock.Request.RequestBody.Content);
                 bool match = true;
                 foreach (var elementName in elementsToCompare)
                 {

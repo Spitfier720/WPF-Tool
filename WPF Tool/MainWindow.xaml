@@ -107,11 +107,12 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Custom Menu Bar using StackPanel and Buttons -->
-        <StackPanel Orientation="Horizontal" Background="#EEE" VerticalAlignment="Stretch" Grid.Column="1">
+        <StackPanel Orientation="Horizontal" Background="#EEE" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="2">
             <Button Content="Start Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding StartServiceCommand}" IsEnabled="{Binding CanStartService}"/>
             <Button Content="Stop Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding StopServiceCommand}" IsEnabled="{Binding CanStopService}"/>
             <Button Content="Load Mock File" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding LoadMockFileCommand}" IsEnabled="{Binding CanLoadMockFile}"/>
@@ -119,7 +120,7 @@
         </StackPanel>
 
         <!-- TreeView Sidebar -->
-        <ScrollViewer Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto" Grid.RowSpan="2">
+        <ScrollViewer Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Grid.RowSpan="2">
             <TreeView x:Name="treeView" ItemsSource="{Binding RootNodes}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectedItemChanged">
@@ -135,8 +136,16 @@
             </TreeView>
         </ScrollViewer>
 
+        <GridSplitter Grid.Row="0" 
+                      Grid.Column="1"
+                      Grid.RowSpan="2"
+                      Width="5"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      ShowsPreview="True" />
+
         <!-- Main Content Area -->
-        <Grid Grid.Row="1" Grid.Column="1">
+        <Grid Grid.Row="1" Grid.Column="2">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding RequestResponsePairs}">
                     <ItemsControl.ItemTemplate>

@@ -2,8 +2,6 @@
 <ArrayOfMockNode xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <MockNode>
     <Request>
-      <RequestType>SOAP</RequestType>
-      <ServiceName>ProfileService</ServiceName>
       <RequestBody>
         <Content>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;  
    &lt;soap:Header&gt;
@@ -55,11 +53,10 @@
     </Response>
     <Url>ProfileService</Url>
     <MethodName>GetProfile</MethodName>
+    <RequestType>SOAP</RequestType>
   </MockNode>
   <MockNode>
     <Request>
-      <RequestType>SOAP</RequestType>
-      <ServiceName>ProfileService</ServiceName>
       <RequestBody>
         <Content>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;  
    &lt;soap:Header&gt;
@@ -111,5 +108,6 @@
     </Response>
     <Url>ProfileService</Url>
     <MethodName>GetProfile</MethodName>
+    <RequestType>SOAP</RequestType>
   </MockNode>
 </ArrayOfMockNode>

@@ -5,7 +5,6 @@ namespace WPF_Tool
 {
     public class MockNodeEditorViewModel : INotifyPropertyChanged
     {
-        public string Service { get => _service; set { _service = value; OnPropertyChanged(nameof(Service)); } }
         public string MethodName { get => _methodName; set { _methodName = value; OnPropertyChanged(nameof(MethodName)); } }
         public string Url { get => _url; set { _url = value; OnPropertyChanged(nameof(Url)); } }
         public string RequestBody { get => _requestBody; set { _requestBody = value; OnPropertyChanged(nameof(RequestBody)); } }
@@ -14,7 +13,7 @@ namespace WPF_Tool
         public string ResponseStatusCode { get => _responseStatusCode; set { _responseStatusCode = value; OnPropertyChanged(nameof(ResponseStatusCode)); } }
         public string Description { get => _description; set { _description = value; OnPropertyChanged(nameof(Description)); } }
 
-        private string _service, _methodName, _url, _requestBody, _responseBody, _responseDelay, _responseStatusCode, _description;
+        private string _methodName, _url, _requestBody, _responseBody, _responseDelay, _responseStatusCode, _description;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

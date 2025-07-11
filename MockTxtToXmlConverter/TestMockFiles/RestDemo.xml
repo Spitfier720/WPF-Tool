@@ -2,8 +2,6 @@
 <ArrayOfMockNode xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <MockNode>
     <Request>
-      <RequestType>REST</RequestType>
-      <ServiceName>/Countries</ServiceName>
       <RequestBody />
     </Request>
     <Response>
@@ -992,11 +990,10 @@
     </Response>
     <Url>Countries</Url>
     <MethodName>GET</MethodName>
+    <RequestType>REST</RequestType>
   </MockNode>
   <MockNode>
     <Request>
-      <RequestType>REST</RequestType>
-      <ServiceName>/Countries</ServiceName>
       <RequestBody>
         <Content>{
   "countryRequest": {
@@ -1019,11 +1016,10 @@
     </Response>
     <Url>Countries</Url>
     <MethodName>POST</MethodName>
+    <RequestType>REST</RequestType>
   </MockNode>
   <MockNode>
     <Request>
-      <RequestType>REST</RequestType>
-      <ServiceName>/Countries</ServiceName>
       <RequestBody>
         <Content>{
   "countryRequest": {
@@ -1046,11 +1042,10 @@
     </Response>
     <Url>Countries</Url>
     <MethodName>POST</MethodName>
+    <RequestType>REST</RequestType>
   </MockNode>
   <MockNode>
     <Request>
-      <RequestType>REST</RequestType>
-      <ServiceName>/Countries/Details</ServiceName>
       <RequestBody>
         <Content>{
   "countryRequest": {
@@ -1101,11 +1096,10 @@
     </Response>
     <Url>Countries/Details</Url>
     <MethodName>POST</MethodName>
+    <RequestType>REST</RequestType>
   </MockNode>
   <MockNode>
     <Request>
-      <RequestType>REST</RequestType>
-      <ServiceName>/Countries/Details</ServiceName>
       <RequestBody>
         <Content>{
   "countryRequest": {
@@ -1147,5 +1141,6 @@
     </Response>
     <Url>Countries/Details</Url>
     <MethodName>POST</MethodName>
+    <RequestType>REST</RequestType>
   </MockNode>
 </ArrayOfMockNode>

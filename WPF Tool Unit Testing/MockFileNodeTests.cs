@@ -1,3 +1,4 @@
+using EasyMockLib.MatchingPolicies;
 using EasyMockLib.Models;
 using Newtonsoft.Json.Linq;
 using System.Net;
@@ -7,18 +8,31 @@ namespace WPF_Tool_Unit_Testing
 {
     public class MockFileNodeTests
     {
-        [Fact]
-        public void GetMock_ReturnsCorrectMock_ForMatchingRestRequest()
+        RestRequestValueMatchingPolicy restConfig = new RestRequestValueMatchingPolicy
         {
-            // Arrange
-            var restConfig = new Dictionary<string, Dictionary<string, List<string>>>
+            RestServiceMatchingConfig = new Dictionary<string, Dictionary<string, List<string>>>
             {
                 ["Countries/Details"] = new()
                 {
                     ["POST"] = new() { "countryRequest.code", "countryRequest.details.population" }
                 }
-            };
-            var soapConfig = new Dictionary<string, Dictionary<string, List<string>>>();
+            }
+        };
+
+        SoapRequestValueMatchingPolicy soapConfig = new SoapRequestValueMatchingPolicy
+        {
+            SoapServiceMatchingConfig = new Dictionary<string, Dictionary<string, List<string>>>
+            {
+                ["ProfileService"] = new()
+                {
+                    ["GetProfile"] = new() { "profileId" }
+                }
+            }
+        };
+
+        [Fact]
+        public void GetMock_ReturnsCorrectMock_ForMatchingRestRequest()
+        {
             var mockFileNode = new MockFileNode();
 
             // Create two mock nodes with different request bodies
@@ -26,27 +40,26 @@ namespace WPF_Tool_Unit_Testing
             {
                 Request = new Request
                 {
-                    RequestType = ServiceType.REST,
-                    ServiceName = "Countries/Details",
                     RequestBody = new Body
                     {
                         Content = @"{""countryRequest"":{""code"":""CA"",""details"":{""population"":38000000}}}",
-                        ContentObject = JObject.Parse(@"{""countryRequest"":{""code"":""CA"",""details"":{""population"":38000000}}}")
                     }
                 },
                 Response = new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    ResponseBody = new Body { Content = @"{""name"":""Canada"",""code"":""CA""}" }
-                }
+                    ResponseBody = new Body { Content = @"{""name"":""Canada"",""code"":""CA""}" },
+                    Delay = 0
+                },
+                Url = "Countries/Details",
+                MethodName = "POST",
+                RequestType = ServiceType.REST
             };
 
             var mock2 = new MockNode
             {
                 Request = new Request
                 {
-                    RequestType = ServiceType.REST,
-                    ServiceName = "Countries/Details",
                     RequestBody = new Body
                     {
                         Content = @"{""countryRequest"":{""code"":""US"",""details"":{""population"":331000000}}}",
@@ -56,8 +69,12 @@ namespace WPF_Tool_Unit_Testing
                 Response = new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    ResponseBody = new Body { Content = @"{""name"":""United States"",""code"":""US""}" }
-                }
+                    ResponseBody = new Body { Content = @"{""name"":""United States"",""code"":""US""}" },
+                    Delay = 0
+                },
+                Url = "Countries/Details",
+                MethodName = "POST",
+                RequestType = ServiceType.REST
             };
 
             mockFileNode.Nodes.Add(mock1);
@@ -72,27 +89,18 @@ namespace WPF_Tool_Unit_Testing
                 "Countries/Details",
                 "POST",
                 requestContent,
-                new Dictionary<string, Dictionary<string, List<string>>>()
+                restConfig
             );
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("CA", ((JObject)result.Request.RequestBody.ContentObject)["countryRequest"]["code"]);
+            Assert.Equal("CA", (JObject.Parse(result.Request.RequestBody.Content)["countryRequest"]["code"]));
             Assert.Equal("Canada", JObject.Parse(result.Response.ResponseBody.Content)["name"]);
         }
 
         [Fact]
         public void GetMock_ReturnsCorrectMock_ForMatchingSoapRequest()
         {
-            // Arrange
-            var restConfig = new Dictionary<string, Dictionary<string, List<string>>>();
-            var soapConfig = new Dictionary<string, Dictionary<string, List<string>>>
-            {
-                ["ProfileService"] = new()
-                {
-                    ["GetProfile"] = new() { "profileId" }
-                }
-            };
             var mockFileNode = new MockFileNode();
 
             // SOAP request for profileId 1000001
@@ -184,38 +192,40 @@ namespace WPF_Tool_Unit_Testing
             {
                 Request = new Request
                 {
-                    RequestType = ServiceType.SOAP,
-                    ServiceName = "ProfileService",
                     RequestBody = new Body
                     {
                         Content = request1,
-                        ContentObject = XElement.Parse(request1)
                     }
                 },
                 Response = new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    ResponseBody = new Body { Content = response1 }
-                }
+                    ResponseBody = new Body { Content = response1 },
+                    Delay = 0
+                },
+                Url = "ProfileService",
+                MethodName = "GetProfile",
+                RequestType = ServiceType.SOAP
             });
 
             mockFileNode.Nodes.Add(new MockNode
             {
                 Request = new Request
                 {
-                    RequestType = ServiceType.SOAP,
-                    ServiceName = "ProfileService",
                     RequestBody = new Body
                     {
                         Content = request2,
-                        ContentObject = XElement.Parse(request2)
                     }
                 },
                 Response = new Response
                 {
                     StatusCode = HttpStatusCode.OK,
-                    ResponseBody = new Body { Content = response2 }
-                }
+                    ResponseBody = new Body { Content = response2 },
+                    Delay = 0
+                },
+                Url = "ProfileService",
+                MethodName = "GetProfile",
+                RequestType = ServiceType.SOAP
             });
 
             // Act: Try to match the first request

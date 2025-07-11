@@ -21,13 +21,13 @@ namespace EasyMockLib.Models
         public string MockFile { get; set; }
         public List<MockNode> Nodes { get; set; }
 
-        public MockNode GetMock(ServiceType serviceType, string service, 
+        public MockNode GetMock(ServiceType serviceType, string url, 
             string method, string requestContent, IMatchingPolicy matchingPolicy)
         {
             var mocks = this.Nodes.Where(m =>
-            m.Request.RequestType == serviceType &&
+            m.RequestType == serviceType &&
             m.MethodName.Equals(method, StringComparison.OrdinalIgnoreCase) &&
-            MatchUrl(m, service, method));
+            MatchUrl(m, url, method));
 
             if (mocks.Any())
             {
@@ -36,7 +36,7 @@ namespace EasyMockLib.Models
                     return mocks.ElementAt(0);
                 }
 
-                MockNode? matchingMock = matchingPolicy.Apply(requestContent, mocks, service, method);
+                MockNode? matchingMock = matchingPolicy.Apply(requestContent, mocks, url, method);
                 if (matchingMock != null)
                 {
                     return matchingMock;
@@ -55,7 +55,7 @@ namespace EasyMockLib.Models
         {
             if (method.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
             {
-                return mock.Request.ServiceName.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
+                return mock.MethodName.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
             }
             else
             {

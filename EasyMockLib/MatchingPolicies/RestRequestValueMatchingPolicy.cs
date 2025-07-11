@@ -13,15 +13,15 @@ namespace EasyMockLib.MatchingPolicies
     {
         public Dictionary<string, Dictionary<string, List<string>>> RestServiceMatchingConfig { get; set; } = new Dictionary<string, Dictionary<string, List<string>>>();
 
-        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, string service, string method)
+        public MockNode? Apply(string requestContent, IEnumerable<MockNode> mocks, string url, string method)
         {
             List<string> elementsToCompare = null;
 
-            if (RestServiceMatchingConfig.ContainsKey(service) &&
-                       RestServiceMatchingConfig[service].ContainsKey(method) &&
-                       RestServiceMatchingConfig[service][method].Count() > 0)
+            if (RestServiceMatchingConfig.ContainsKey(url) &&
+                       RestServiceMatchingConfig[url].ContainsKey(method) &&
+                       RestServiceMatchingConfig[url][method].Count() > 0)
             {
-                elementsToCompare = RestServiceMatchingConfig[service][method];
+                elementsToCompare = RestServiceMatchingConfig[url][method];
             }
 
             else
@@ -32,7 +32,7 @@ namespace EasyMockLib.MatchingPolicies
                 JObject jIncomingRequest = JObject.Parse(requestContent);
             foreach (var mock in mocks)
             {
-                var jMockRequest = (JObject)mock.Request.RequestBody.ContentObject;
+                var jMockRequest = JObject.Parse(mock.Request.RequestBody.Content);
                 if (elementsToCompare == null || elementsToCompare.Count == 0)
                 {
                     if (JToken.DeepEquals(jIncomingRequest, jMockRequest))

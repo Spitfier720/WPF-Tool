@@ -93,80 +93,10 @@ namespace WPF_Tool
 
             foreach (var file in Directory.EnumerateFiles(ConfigurationManager.AppSettings["MockFileFolder"], "*.xml"))
             {
-                var serializer = new XmlSerializer(typeof(List<MockNode>));
-                List<MockNode> nodes = new List<MockNode>();
-                using (var xml = File.OpenRead(file))
-                {
-                    nodes = (List<MockNode>)serializer.Deserialize(xml);
-                }
-
-                // Assign ContentObject for each node's request and response body
-                foreach (var node in nodes)
-                {
-                    node.Request.RequestBody.Content = Dedent(node.Request.RequestBody.Content ?? string.Empty);
-                    node.Response.ResponseBody.Content = Dedent(node.Response.ResponseBody.Content ?? string.Empty);
-
-                    // Handle RequestBody
-                    if (node.Request?.RequestBody?.Content != null)
-                    {
-                        var content = node.Request.RequestBody.Content.Trim();
-                        if (node.Request.RequestType == ServiceType.REST)
-                        {
-                            try
-                            {
-                                node.Request.RequestBody.ContentObject = JToken.Parse(content);
-                            }
-                            catch
-                            {
-                                node.Request.RequestBody.ContentObject = null;
-                            }
-                        }
-                        else if (node.Request.RequestType == ServiceType.SOAP)
-                        {
-                            try
-                            {
-                                node.Request.RequestBody.ContentObject = XElement.Parse(content);
-                            }
-                            catch
-                            {
-                                node.Request.RequestBody.ContentObject = null;
-                            }
-                        }
-                    }
-
-                    // Handle ResponseBody
-                    if (node.Response?.ResponseBody?.Content != null)
-                    {
-                        var content = node.Response.ResponseBody.Content.Trim();
-                        if (node.Request.RequestType == ServiceType.REST)
-                        {
-                            try
-                            {
-                                node.Response.ResponseBody.ContentObject = JToken.Parse(content);
-                            }
-                            catch
-                            {
-                                node.Response.ResponseBody.ContentObject = null;
-                            }
-                        }
-                        else if (node.Request.RequestType == ServiceType.SOAP)
-                        {
-                            try
-                            {
-                                node.Response.ResponseBody.ContentObject = XElement.Parse(content);
-                            }
-                            catch
-                            {
-                                node.Response.ResponseBody.ContentObject = null;
-                            }
-                        }
-                    }
-                }
-
                 var mockFileNode = new MockFileNode()
                 {
                     MockFile = file,
-                    Nodes = nodes
+                    Nodes = ParseXML(file)
                 };
 
                 RootNodes.Add(new MockTreeNode(mockFileNode));
@@ -202,56 +132,13 @@ namespace WPF_Tool
             var filePath = _fileDialogService.OpenFile("XML Files (*.xml)|*.xml");
             if (string.IsNullOrEmpty(filePath)) return;
 
-            var serializer = new XmlSerializer(typeof(List<MockNode>));
-            List<MockNode> nodes;
-            using (var xml = File.OpenRead(filePath))
-            {
-                nodes = (List<MockNode>)serializer.Deserialize(xml);
-            }
-
-            // Assign ContentObject for each node's request and response body
-            foreach (var node in nodes)
-            {
-                // Handle RequestBody
-                if (node.Request?.RequestBody?.Content != null)
-                {
-                    var content = node.Request.RequestBody.Content.Trim();
-                    if (node.Request.RequestType == ServiceType.REST)
-                    {
-                        try { node.Request.RequestBody.ContentObject = JToken.Parse(content); }
-                        catch { node.Request.RequestBody.ContentObject = null; }
-                    }
-                    else if (node.Request.RequestType == ServiceType.SOAP)
-                    {
-                        try { node.Request.RequestBody.ContentObject = XElement.Parse(content); }
-                        catch { node.Request.RequestBody.ContentObject = null; }
-                    }
-                }
-
-                // Handle ResponseBody
-                if (node.Response?.ResponseBody?.Content != null)
-                {
-                    var content = node.Response.ResponseBody.Content.Trim();
-                    if (node.Request.RequestType == ServiceType.REST)
-                    {
-                        try { node.Response.ResponseBody.ContentObject = JToken.Parse(content); }
-                        catch { node.Response.ResponseBody.ContentObject = null; }
-                    }
-                    else if (node.Request.RequestType == ServiceType.SOAP)
-                    {
-                        try { node.Response.ResponseBody.ContentObject = XElement.Parse(content); }
-                        catch { node.Response.ResponseBody.ContentObject = null; }
-                    }
-                }
-            }
-
             var mockFileNode = new MockFileNode()
             {
                 MockFile = filePath,
-                Nodes = nodes
+                Nodes = ParseXML(filePath)
             };
 
-            RootNodes.Add(new MockTreeNode(mockFileNode));
+            RootNodes.Insert(0, new MockTreeNode(mockFileNode));
         }
 
         private void StartWebServer()
@@ -500,7 +387,6 @@ namespace WPF_Tool
                             Description = vm.Description,
                             Request = new Request
                             {
-                                ServiceName = vm.Service,
                                 RequestBody = new Body
                                 {
                                     Content = vm.RequestBody
@@ -531,7 +417,6 @@ namespace WPF_Tool
                         // Create and pre-fill the editor ViewModel
                         var vm = new MockNodeEditorViewModel
                         {
-                            Service = mockNodeToEdit.Request.ServiceName,
                             MethodName = mockNodeToEdit.MethodName,
                             Url = mockNodeToEdit.Url,
                             RequestBody = mockNodeToEdit.Request.RequestBody?.Content,
@@ -547,7 +432,6 @@ namespace WPF_Tool
                         if (mockNodeEditor.ShowDialog() == true)
                         {
                             // Update the existing MockNode with edited values
-                            mockNodeToEdit.Request.ServiceName = vm.Service;
                             mockNodeToEdit.MethodName = vm.MethodName;
                             mockNodeToEdit.Url = vm.Url;
                             mockNodeToEdit.Request.RequestBody.Content = vm.RequestBody;
@@ -595,10 +479,13 @@ namespace WPF_Tool
                         int index = RootNodes.IndexOf(node);
                         if (index >= 0)
                         {
-                            //var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
-                            //var refreshedMock = parser.Parse(fileNode.MockFile);
-                            RootNodes.RemoveAt(index);
-                            //RootNodes.Insert(index, new MockTreeNode(refreshedMock));
+                            var refreshedMockFileNode = new MockFileNode()
+                            {
+                                MockFile = fileNode.MockFile,
+                                Nodes = ParseXML(fileNode.MockFile)
+                            };
+
+                            RootNodes[index] = new MockTreeNode(refreshedMockFileNode);
                         }
                     }
                     break;
@@ -621,6 +508,55 @@ namespace WPF_Tool
                     ResponseBody = responseBody
                 });
             });
+        }
+
+        private List<MockNode> ParseXML(string filepath)
+        {
+            var serializer = new XmlSerializer(typeof(List<MockNode>));
+            List<MockNode> nodes;
+            using (var xml = File.OpenRead(filepath))
+            {
+                nodes = (List<MockNode>)serializer.Deserialize(xml);
+            }
+
+            // Dedent and assign ContentObject for each node's request and response body
+            foreach (var mockNode in nodes)
+            {
+                mockNode.Request.RequestBody.Content = Dedent(mockNode.Request.RequestBody.Content ?? string.Empty);
+                mockNode.Response.ResponseBody.Content = Dedent(mockNode.Response.ResponseBody.Content ?? string.Empty);
+
+                if (mockNode.Request?.RequestBody?.Content != null)
+                {
+                    var content = mockNode.Request.RequestBody.Content.Trim();
+                    if (mockNode.RequestType == ServiceType.REST)
+                    {
+                        try { mockNode.Request.RequestBody.ContentObject = JToken.Parse(content); }
+                        catch { mockNode.Request.RequestBody.ContentObject = null; }
+                    }
+                    else if (mockNode.RequestType == ServiceType.SOAP)
+                    {
+                        try { mockNode.Request.RequestBody.ContentObject = XElement.Parse(content); }
+                        catch { mockNode.Request.RequestBody.ContentObject = null; }
+                    }
+                }
+
+                if (mockNode.Response?.ResponseBody?.Content != null)
+                {
+                    var content = mockNode.Response.ResponseBody.Content.Trim();
+                    if (mockNode.RequestType == ServiceType.REST)
+                    {
+                        try { mockNode.Response.ResponseBody.ContentObject = JToken.Parse(content); }
+                        catch { mockNode.Response.ResponseBody.ContentObject = null; }
+                    }
+                    else if (mockNode.RequestType == ServiceType.SOAP)
+                    {
+                        try { mockNode.Response.ResponseBody.ContentObject = XElement.Parse(content); }
+                        catch { mockNode.Response.ResponseBody.ContentObject = null; }
+                    }
+                }
+            }
+
+            return nodes;
         }
     }
 }

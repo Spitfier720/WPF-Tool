@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EasyMockLib\EasyMockLib.csproj" />
-    <ProjectReference Include="..\WPF Tool\WPF Tool.csproj" />
   </ItemGroup>
 
   <ItemGroup>

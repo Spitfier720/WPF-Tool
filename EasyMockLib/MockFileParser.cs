@@ -112,11 +112,7 @@ namespace EasyMockLib
         {
             var url = m.Groups[1].Value;
             var methodName = m.Groups[2].Value;
-            Request req = new Request()
-            {
-                RequestType = ServiceType.SOAP,
-                ServiceName = m.Groups[1].Value.Substring(m.Groups[1].Value.LastIndexOf('/') + 1),
-            };
+            Request req = new Request();
             req.RequestBody = ReadSoapBlock(reader, line);
             return (methodName, url, req);
         }
@@ -133,6 +129,7 @@ namespace EasyMockLib
             return new MockNode() {
                 Url = url.Replace("http://localhost:8888", "").Trim('/'),
                 MethodName = methodName,
+                RequestType = ServiceType.SOAP,
                 Request = requestTuple.Request, 
                 Response = response 
             };
@@ -141,11 +138,7 @@ namespace EasyMockLib
         {
             var url = m.Groups[2].Value;
             var methodName = m.Groups[1].Value;
-            Request req = new Request()
-            {
-                RequestType = ServiceType.REST,
-                ServiceName = (new Uri(m.Groups[2].Value)).AbsolutePath,
-            };
+            Request req = new Request();
             if (!methodName.Equals("GET", StringComparison.OrdinalIgnoreCase))
             {
                 req.RequestBody = ReadRestRequestBlock(reader);
@@ -162,6 +155,7 @@ namespace EasyMockLib
             return new MockNode() {
                 Url = url.Replace("http://localhost:8888", "").Trim('/'),
                 MethodName = methodName,
+                RequestType = ServiceType.REST,
                 Request = requestTuple.Request, 
                 Response = response 
             };
