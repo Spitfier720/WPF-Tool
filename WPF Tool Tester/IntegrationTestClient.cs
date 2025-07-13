@@ -15,10 +15,10 @@ class IntegrationTestClient
         // REST GET request
         var restGetUrl = baseUrl + "Countries";
         var restBody = @"{
-                            ""countryRequest"": {
-                                ""code"": ""CA""
-                            }
-                        }";
+    ""countryRequest"": {
+        ""code"": ""CA""
+    }
+}";
         var restContent = new StringContent(restBody, Encoding.UTF8, "application/json");
         var restGetResponse = await client.PostAsync(restGetUrl, restContent);
         Console.WriteLine($"REST POST: {restGetUrl} => {restGetResponse.StatusCode}");
@@ -27,14 +27,14 @@ class IntegrationTestClient
         // SOAP request
         var soapUrl = baseUrl + "ProfileService";
         var soapEnvelope = @"<?xml version=""1.0"" encoding=""utf-8""?>
-                            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-                              <soap:Body>
-                                <GetProfileRequest>
-                                  <profileType>Personal</profileType>
-                                  <profileId>1000002</profileId>
-                                </GetProfileRequest>
-                              </soap:Body>
-                            </soap:Envelope>";
+<soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+    <soap:Body>
+    <GetProfileRequest>
+        <profileType>Personal</profileType>
+        <profileId>1000002</profileId>
+    </GetProfileRequest>
+    </soap:Body>
+</soap:Envelope>";
         var soapContent = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
         var soapResponse = await client.PostAsync(soapUrl, soapContent);
         Console.WriteLine($"SOAP POST: {soapUrl} => {soapResponse.StatusCode}");

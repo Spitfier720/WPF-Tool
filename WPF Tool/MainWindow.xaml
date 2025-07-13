@@ -6,6 +6,7 @@
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
         <local:ContextMenuParameterConverter x:Key="ContextMenuParameterConverter"/>
+        <local:IsErrorStatusCodeConverter x:Key="IsErrorStatusCodeConverter"/>
         <HierarchicalDataTemplate DataType="{x:Type local:TreeNode}" ItemsSource="{Binding Children}">
             <TextBlock Text="{Binding Header}" />
         </HierarchicalDataTemplate>
@@ -127,6 +128,10 @@
                         <i:InvokeCommandAction Command="{Binding TreeNodeSelectedCommand}" 
                                CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=TreeView}}" />
                     </i:EventTrigger>
+                    <i:EventTrigger EventName="MouseDoubleClick">
+                        <i:InvokeCommandAction Command="{Binding TreeNodeDoubleClickCommand}" 
+                               CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                    </i:EventTrigger>
                 </i:Interaction.Triggers>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
@@ -150,7 +155,23 @@
                 <ItemsControl ItemsSource="{Binding RequestResponsePairs}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Expander Margin="4" Header="{Binding RequestSummary}">
+                            <Expander Margin="4">
+                                <Expander.Header>
+                                    <TextBlock Text="{Binding RequestSummary}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="Normal"/>
+                                                <Setter Property="Foreground" Value="Black"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusCode, Converter={StaticResource IsErrorStatusCodeConverter}}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                        <Setter Property="Foreground" Value="Red"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Expander.Header>
                                 <StackPanel>
                                     <TextBlock Text="Request:" FontWeight="Bold" Margin="0,0,0,2"/>
                                     <TextBox Text="{Binding RequestBody}" IsReadOnly="True" TextWrapping="Wrap" Background="#F7F7F7" Margin="0,0,0,6"/>

@@ -53,7 +53,7 @@ namespace WPF_Tool_Unit_Testing
                 },
                 Url = "Countries/Details",
                 MethodName = "POST",
-                RequestType = ServiceType.REST
+                ServiceType = ServiceType.REST
             };
 
             var mock2 = new MockNode
@@ -74,7 +74,7 @@ namespace WPF_Tool_Unit_Testing
                 },
                 Url = "Countries/Details",
                 MethodName = "POST",
-                RequestType = ServiceType.REST
+                ServiceType = ServiceType.REST
             };
 
             mockFileNode.Nodes.Add(mock1);
@@ -205,7 +205,7 @@ namespace WPF_Tool_Unit_Testing
                 },
                 Url = "ProfileService",
                 MethodName = "GetProfile",
-                RequestType = ServiceType.SOAP
+                ServiceType = ServiceType.SOAP
             });
 
             mockFileNode.Nodes.Add(new MockNode
@@ -225,7 +225,7 @@ namespace WPF_Tool_Unit_Testing
                 },
                 Url = "ProfileService",
                 MethodName = "GetProfile",
-                RequestType = ServiceType.SOAP
+                ServiceType = ServiceType.SOAP
             });
 
             // Act: Try to match the first request

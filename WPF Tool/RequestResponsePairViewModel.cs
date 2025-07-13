@@ -4,4 +4,5 @@ public class RequestResponsePair
     public string RequestBody { get; set; }
     public string ResponseSummary { get; set; }
     public string ResponseBody { get; set; }
+    public int StatusCode { get; set; }
 }

@@ -129,7 +129,7 @@ namespace EasyMockLib
             return new MockNode() {
                 Url = url.Replace("http://localhost:8888", "").Trim('/'),
                 MethodName = methodName,
-                RequestType = ServiceType.SOAP,
+                ServiceType = ServiceType.SOAP,
                 Request = requestTuple.Request, 
                 Response = response 
             };
@@ -155,7 +155,7 @@ namespace EasyMockLib
             return new MockNode() {
                 Url = url.Replace("http://localhost:8888", "").Trim('/'),
                 MethodName = methodName,
-                RequestType = ServiceType.REST,
+                ServiceType = ServiceType.REST,
                 Request = requestTuple.Request, 
                 Response = response 
             };

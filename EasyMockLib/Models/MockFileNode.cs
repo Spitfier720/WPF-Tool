@@ -25,7 +25,7 @@ namespace EasyMockLib.Models
             string method, string requestContent, IMatchingPolicy matchingPolicy)
         {
             var mocks = this.Nodes.Where(m =>
-            m.RequestType == serviceType &&
+            m.ServiceType == serviceType &&
             m.MethodName.Equals(method, StringComparison.OrdinalIgnoreCase) &&
             MatchUrl(m, url, method));
 

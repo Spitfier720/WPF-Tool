@@ -10,18 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="MockFiles\RestDemo.xml" />
-    <None Remove="MockFiles\SoapDemo.xml" />
     <None Remove="RestServiceMatchingConfig.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="MockFiles\RestDemo.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="MockFiles\SoapDemo.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="RestServiceMatchingConfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

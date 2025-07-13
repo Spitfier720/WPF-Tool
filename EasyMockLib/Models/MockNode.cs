@@ -9,7 +9,7 @@ namespace EasyMockLib.Models
         public string Url { get; set; }
         public string MethodName { get; set; }
         public string Description { get; set; }
-        public ServiceType RequestType { get; set; }
+        public ServiceType ServiceType { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>

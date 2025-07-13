@@ -38,6 +38,7 @@ namespace WPF_Tool
         public ICommand StartServiceCommand { get; }
         public ICommand StopServiceCommand { get; }
         public ICommand TreeNodeSelectedCommand { get; }
+        public ICommand TreeNodeDoubleClickCommand { get; }
         private readonly IFileDialogService _fileDialogService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -112,19 +113,54 @@ namespace WPF_Tool
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
             StopServiceCommand = new RelayCommand<object>(_ => StopWebServer(), _ => CanStopService);
             TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
+            TreeNodeDoubleClickCommand = new RelayCommand<MockTreeNode>(OnTreeViewItemDoubleClick);
             _fileDialogService = fileDialogService;
         }
 
-        private static string Dedent(string text)
+        private static void DedentRequestResponse(MockNode mock)
         {
-            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
-            var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-            var nonEmptyLines = lines.Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
-            if (!nonEmptyLines.Any()) return text.Trim();
+            if (mock == null) return;
 
-            int minIndent = nonEmptyLines.Min(l => l.TakeWhile(char.IsWhiteSpace).Count());
-            var dedented = lines.Select(l => l.Length >= minIndent ? l.Substring(minIndent) : l).ToArray();
-            return string.Join(Environment.NewLine, dedented).Trim();
+            if (mock.ServiceType == ServiceType.REST)
+            {
+                // Request
+                var reqContent = mock.Request?.RequestBody?.Content;
+                if (!string.IsNullOrWhiteSpace(reqContent))
+                {
+                    reqContent = reqContent.Trim();
+                    if (reqContent.StartsWith("{"))
+                        mock.Request.RequestBody.Content = JObject.Parse(reqContent).ToString(Formatting.Indented);
+                    else if (reqContent.StartsWith("["))
+                        mock.Request.RequestBody.Content = JArray.Parse(reqContent).ToString(Formatting.Indented);
+                }
+
+                // Response
+                var respContent = mock.Response?.ResponseBody?.Content;
+                if (!string.IsNullOrWhiteSpace(respContent))
+                {
+                    respContent = respContent.Trim();
+                    if (respContent.StartsWith("{"))
+                        mock.Response.ResponseBody.Content = JObject.Parse(respContent).ToString(Formatting.Indented);
+                    else if (respContent.StartsWith("["))
+                        mock.Response.ResponseBody.Content = JArray.Parse(respContent).ToString(Formatting.Indented);
+                }
+            }
+            else if (mock.ServiceType == ServiceType.SOAP)
+            {
+                // Request
+                var reqContent = mock.Request?.RequestBody?.Content;
+                if (!string.IsNullOrWhiteSpace(reqContent))
+                {
+                    mock.Request.RequestBody.Content = XElement.Parse(reqContent.Trim()).ToString();
+                }
+
+                // Response
+                var respContent = mock.Response?.ResponseBody?.Content;
+                if (!string.IsNullOrWhiteSpace(respContent))
+                {
+                    mock.Response.ResponseBody.Content = XElement.Parse(respContent.Trim()).ToString();
+                }
+            }
         }
 
         private void LoadMockFile()
@@ -199,7 +235,7 @@ namespace WPF_Tool
                         Thread.Sleep(mock.Response.Delay * 1000);
                         OutputMockResponse(mock, context, response);
 
-                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody);
+                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody, (int)mock.Response.StatusCode);
                     }
                     else
                     {
@@ -210,7 +246,7 @@ namespace WPF_Tool
 
                         response.StatusCode = (int)HttpStatusCode.NotFound;
 
-                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody);
+                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody, (int)HttpStatusCode.NotFound);
                     }
                 }
                 catch (Exception e)
@@ -226,7 +262,8 @@ namespace WPF_Tool
                         "Exception",
                         "",
                         "StatusCode: 500",
-                        e.ToString()
+                        e.ToString(),
+                        response.StatusCode
                     );
                 }
             }
@@ -285,6 +322,7 @@ namespace WPF_Tool
         }
         private void OutputResponseContent(string content, HttpStatusCode status, HttpListenerContext context, HttpListenerResponse response)
         {
+            content ??= string.Empty;
             byte[] buffer = Encoding.UTF8.GetBytes(content);
             // Get a response stream and write the response to it.
             response.ContentLength64 = buffer.Length;
@@ -321,7 +359,7 @@ namespace WPF_Tool
                 {
                     var node = treeNode.Tag as MockNode;
 
-                    //if (node?.Request.RequestType == ServiceType.SOAP)
+                    //if (node?.Request.ServiceType == ServiceType.SOAP)
                     //{
                     //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
                     //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
@@ -351,6 +389,15 @@ namespace WPF_Tool
             }
         }
 
+        private void OnTreeViewItemDoubleClick(MockTreeNode node)
+        {
+            if (node == null) return;
+            else if (node.NodeType == NodeTypes.MockItem)
+            {
+                // If it's a mock item, open the editor
+                OnMockNodeContextMenuAction(new Tuple<string, MockTreeNode>("Edit", node));
+            }
+        }
         private void SaveMock(MockTreeNode root)
         {
             var mockFileNode = root.Tag as MockFileNode;
@@ -496,7 +543,7 @@ namespace WPF_Tool
             }
         }
 
-        public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody)
+        public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody, int statusCode)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -505,7 +552,8 @@ namespace WPF_Tool
                     RequestSummary = requestSummary,
                     RequestBody = requestBody,
                     ResponseSummary = responseSummary,
-                    ResponseBody = responseBody
+                    ResponseBody = responseBody,
+                    StatusCode = statusCode
                 });
             });
         }
@@ -522,18 +570,17 @@ namespace WPF_Tool
             // Dedent and assign ContentObject for each node's request and response body
             foreach (var mockNode in nodes)
             {
-                mockNode.Request.RequestBody.Content = Dedent(mockNode.Request.RequestBody.Content ?? string.Empty);
-                mockNode.Response.ResponseBody.Content = Dedent(mockNode.Response.ResponseBody.Content ?? string.Empty);
+                DedentRequestResponse(mockNode);
 
                 if (mockNode.Request?.RequestBody?.Content != null)
                 {
                     var content = mockNode.Request.RequestBody.Content.Trim();
-                    if (mockNode.RequestType == ServiceType.REST)
+                    if (mockNode.ServiceType == ServiceType.REST)
                     {
                         try { mockNode.Request.RequestBody.ContentObject = JToken.Parse(content); }
                         catch { mockNode.Request.RequestBody.ContentObject = null; }
                     }
-                    else if (mockNode.RequestType == ServiceType.SOAP)
+                    else if (mockNode.ServiceType == ServiceType.SOAP)
                     {
                         try { mockNode.Request.RequestBody.ContentObject = XElement.Parse(content); }
                         catch { mockNode.Request.RequestBody.ContentObject = null; }
@@ -543,12 +590,12 @@ namespace WPF_Tool
                 if (mockNode.Response?.ResponseBody?.Content != null)
                 {
                     var content = mockNode.Response.ResponseBody.Content.Trim();
-                    if (mockNode.RequestType == ServiceType.REST)
+                    if (mockNode.ServiceType == ServiceType.REST)
                     {
                         try { mockNode.Response.ResponseBody.ContentObject = JToken.Parse(content); }
                         catch { mockNode.Response.ResponseBody.ContentObject = null; }
                     }
-                    else if (mockNode.RequestType == ServiceType.SOAP)
+                    else if (mockNode.ServiceType == ServiceType.SOAP)
                     {
                         try { mockNode.Response.ResponseBody.ContentObject = XElement.Parse(content); }
                         catch { mockNode.Response.ResponseBody.ContentObject = null; }

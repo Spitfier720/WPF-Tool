@@ -990,7 +990,7 @@
     </Response>
     <Url>Countries</Url>
     <MethodName>GET</MethodName>
-    <RequestType>REST</RequestType>
+    <ServiceType>REST</ServiceType>
   </MockNode>
   <MockNode>
     <Request>
@@ -1016,7 +1016,7 @@
     </Response>
     <Url>Countries</Url>
     <MethodName>POST</MethodName>
-    <RequestType>REST</RequestType>
+    <ServiceType>REST</ServiceType>
   </MockNode>
   <MockNode>
     <Request>
@@ -1042,7 +1042,7 @@
     </Response>
     <Url>Countries</Url>
     <MethodName>POST</MethodName>
-    <RequestType>REST</RequestType>
+    <ServiceType>REST</ServiceType>
   </MockNode>
   <MockNode>
     <Request>
@@ -1096,7 +1096,7 @@
     </Response>
     <Url>Countries/Details</Url>
     <MethodName>POST</MethodName>
-    <RequestType>REST</RequestType>
+    <ServiceType>REST</ServiceType>
   </MockNode>
   <MockNode>
     <Request>
@@ -1141,6 +1141,6 @@
     </Response>
     <Url>Countries/Details</Url>
     <MethodName>POST</MethodName>
-    <RequestType>REST</RequestType>
+    <ServiceType>REST</ServiceType>
   </MockNode>
 </ArrayOfMockNode>
