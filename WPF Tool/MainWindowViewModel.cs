@@ -43,6 +43,20 @@ namespace WPF_Tool
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        private string _logOutput;
+        public string LogOutput
+        {
+            get => _logOutput;
+            set
+            {
+                if (_logOutput != value)
+                {
+                    _logOutput = value;
+                    OnPropertyChanged(nameof(LogOutput));
+                }
+            }
+        }
+
         private bool _isMockFileSelected;
         public bool IsMockFileSelected
         {
@@ -107,7 +121,9 @@ namespace WPF_Tool
             ClearLogCommand = new RelayCommand<object>(_ =>
             {
                 RequestResponsePairs.Clear();
+                LogOutput = string.Empty;
                 OnPropertyChanged(nameof(RequestResponsePairs));
+                OnPropertyChanged(nameof(LogOutput));
             });
             LoadMockFileCommand = new RelayCommand<object>(_ => LoadMockFile());
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
@@ -192,7 +208,7 @@ namespace WPF_Tool
             {
                 listener.Prefixes.Add("http://localhost:8080/");
                 listener.Start();
-                //AppendOutput($"Mock service started.\n");
+                AppendOutput($"Mock service started.\n");
                 Application.Current.Dispatcher.Invoke(() => IsServiceRunning = true);
 
                 while (!tokenSource.IsCancellationRequested)
@@ -212,7 +228,7 @@ namespace WPF_Tool
 
         public void StopWebServer()
         {
-            //AppendOutput($"Mock service stopped.{Environment.NewLine}");
+            AppendOutput($"Mock service stopped.{Environment.NewLine}");
             Application.Current.Dispatcher.Invoke(() => IsServiceRunning = false);
             tokenSource?.Cancel();
         }
@@ -232,6 +248,8 @@ namespace WPF_Tool
                         string responseSummary = $"StatusCode: {mock.Response.StatusCode}";
                         string responseBody = mock.Response.ResponseBody?.Content ?? string.Empty;
 
+                        if(mock.Response.Delay != 0)
+                            AppendOutput("Sleeping for " + mock.Response.Delay + " seconds...");
                         Thread.Sleep(mock.Response.Delay * 1000);
                         OutputMockResponse(mock, context, response);
 
@@ -278,7 +296,7 @@ namespace WPF_Tool
             {
                 // REST request
                 method = context.Request.HttpMethod.ToString();
-                string url = context.Request.HttpMethod == HttpMethod.Get.ToString() ? context.Request.Url.PathAndQuery : context.Request.Url.AbsolutePath.Substring(context.Request.Url.AbsolutePath.LastIndexOf('/') + 1);
+                string url = context.Request.Url.AbsolutePath.Substring(context.Request.Url.AbsolutePath.LastIndexOf('/') + 1);
                 mock = GetMock(ServiceType.REST, url, method, requestContent, restMatchPolicy);
             }
             else if (context.Request.ContentType.StartsWith("text/xml"))
@@ -289,7 +307,7 @@ namespace WPF_Tool
             }
             else
             {
-                MessageBox.Show($"Unknow content type {context.Request.ContentType}");
+                MessageBox.Show($"Unknown content type {context.Request.ContentType}");
             }
             return (mock, method, requestContent);
         }
@@ -543,6 +561,10 @@ namespace WPF_Tool
             }
         }
 
+        public void AppendOutput(string message)
+        {
+            LogOutput += message + Environment.NewLine;
+        }
         public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody, int statusCode)
         {
             Application.Current.Dispatcher.Invoke(() =>

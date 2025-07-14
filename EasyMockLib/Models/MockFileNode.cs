@@ -53,14 +53,7 @@ namespace EasyMockLib.Models
 
         private bool MatchUrl(MockNode mock, string url, string method)
         {
-            if (method.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return mock.MethodName.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                return mock.Url.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
-            }
+            return mock.Url.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
         }
 
         private string UriPath(string pathAndQuery, string method)

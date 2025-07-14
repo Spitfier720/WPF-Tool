@@ -151,7 +151,11 @@
 
         <!-- Main Content Area -->
         <Grid Grid.Row="1" Grid.Column="2">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="80" />
+            </Grid.RowDefinitions>
+            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding RequestResponsePairs}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -172,17 +176,49 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </Expander.Header>
-                                <StackPanel>
-                                    <TextBlock Text="Request:" FontWeight="Bold" Margin="0,0,0,2"/>
-                                    <TextBox Text="{Binding RequestBody}" IsReadOnly="True" TextWrapping="Wrap" Background="#F7F7F7" Margin="0,0,0,6"/>
-                                    <TextBlock Text="{Binding ResponseSummary}" FontWeight="Bold" Margin="0,0,0,2"/>
-                                    <TextBox Text="{Binding ResponseBody}" IsReadOnly="True" TextWrapping="Wrap" Background="#FFFBEA"/>
-                                </StackPanel>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="Request:" FontWeight="Bold" Margin="0,0,0,2" Grid.Row="0"/>
+                                    <TextBox Text="{Binding RequestBody}"
+                                             IsReadOnly="True"
+                                             TextWrapping="NoWrap"
+                                             Background="#F7F7F7"
+                                             Margin="0,0,0,6"
+                                             MaxHeight="250"
+                                             HorizontalAlignment="Stretch"
+                                             VerticalScrollBarVisibility="Auto"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             Grid.Row="1"/>
+                                    <TextBlock Text="{Binding ResponseSummary}" FontWeight="Bold" Margin="0,0,0,2" Grid.Row="2"/>
+                                    <TextBox Text="{Binding ResponseBody}"
+                                             IsReadOnly="True"
+                                             TextWrapping="NoWrap"
+                                             Background="#FFFBEA"
+                                             MaxHeight="250"
+                                             HorizontalAlignment="Stretch"
+                                             VerticalScrollBarVisibility="Auto"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             Grid.Row="3"/>
+                                </Grid>
                             </Expander>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
+            <TextBox Grid.Row="1"
+                     Text="{Binding LogOutput, UpdateSourceTrigger=PropertyChanged}"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     Background="#F7F7F7"
+                     FontFamily="Consolas"
+                     Margin="2"/>
         </Grid>
     </Grid>
 </Window>

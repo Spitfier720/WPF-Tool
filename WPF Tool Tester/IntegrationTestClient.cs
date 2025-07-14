@@ -12,7 +12,7 @@ class IntegrationTestClient
 
         using var client = new HttpClient();
 
-        // REST GET request
+        // REST request
         var restGetUrl = baseUrl + "Countries";
         var restBody = @"{
     ""countryRequest"": {
