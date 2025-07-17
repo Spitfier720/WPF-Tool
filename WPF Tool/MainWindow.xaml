@@ -3,6 +3,7 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WPF_Tool"
+        local:WindowClosingCommandBehavior.ClosingCommand="{Binding WindowCloseCommand}"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
         <local:ContextMenuParameterConverter x:Key="ContextMenuParameterConverter"/>
@@ -80,7 +81,9 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                            <Border Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                            </Border>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -121,25 +124,23 @@
         </StackPanel>
 
         <!-- TreeView Sidebar -->
-        <ScrollViewer Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Grid.RowSpan="2">
-            <TreeView x:Name="treeView" ItemsSource="{Binding RootNodes}">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="SelectedItemChanged">
-                        <i:InvokeCommandAction Command="{Binding TreeNodeSelectedCommand}" 
+        <TreeView Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" x:Name="treeView" ItemsSource="{Binding RootNodes}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectedItemChanged">
+                    <i:InvokeCommandAction Command="{Binding TreeNodeSelectedCommand}" 
                                CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=TreeView}}" />
-                    </i:EventTrigger>
-                    <i:EventTrigger EventName="MouseDoubleClick">
-                        <i:InvokeCommandAction Command="{Binding TreeNodeDoubleClickCommand}" 
+                </i:EventTrigger>
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command="{Binding TreeNodeDoubleClickCommand}" 
                                CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=TreeView}}" />
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-                <TreeView.ItemContainerStyle>
-                    <Style TargetType="TreeViewItem">
-                        <Setter Property="ContextMenu" Value="{StaticResource TreeViewItemContextMenu}"/>
-                    </Style>
-                </TreeView.ItemContainerStyle>
-            </TreeView>
-        </ScrollViewer>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="ContextMenu" Value="{StaticResource TreeViewItemContextMenu}"/>
+                </Style>
+            </TreeView.ItemContainerStyle>
+        </TreeView>
 
         <GridSplitter Grid.Row="0" 
                       Grid.Column="1"
@@ -150,75 +151,77 @@
                       ShowsPreview="True" />
 
         <!-- Main Content Area -->
-        <Grid Grid.Row="1" Grid.Column="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="80" />
-            </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding RequestResponsePairs}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Expander Margin="4">
-                                <Expander.Header>
-                                    <TextBlock Text="{Binding RequestSummary}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="FontWeight" Value="Normal"/>
-                                                <Setter Property="Foreground" Value="Black"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding StatusCode, Converter={StaticResource IsErrorStatusCodeConverter}}" Value="True">
-                                                        <Setter Property="FontWeight" Value="Bold"/>
-                                                        <Setter Property="Foreground" Value="Red"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Expander.Header>
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="Request:" FontWeight="Bold" Margin="0,0,0,2" Grid.Row="0"/>
-                                    <TextBox Text="{Binding RequestBody}"
-                                             IsReadOnly="True"
-                                             TextWrapping="NoWrap"
-                                             Background="#F7F7F7"
-                                             Margin="0,0,0,6"
-                                             MaxHeight="250"
-                                             HorizontalAlignment="Stretch"
-                                             VerticalScrollBarVisibility="Auto"
-                                             HorizontalScrollBarVisibility="Auto"
-                                             Grid.Row="1"/>
-                                    <TextBlock Text="{Binding ResponseSummary}" FontWeight="Bold" Margin="0,0,0,2" Grid.Row="2"/>
-                                    <TextBox Text="{Binding ResponseBody}"
-                                             IsReadOnly="True"
-                                             TextWrapping="NoWrap"
-                                             Background="#FFFBEA"
-                                             MaxHeight="250"
-                                             HorizontalAlignment="Stretch"
-                                             VerticalScrollBarVisibility="Auto"
-                                             HorizontalScrollBarVisibility="Auto"
-                                             Grid.Row="3"/>
-                                </Grid>
-                            </Expander>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-            <TextBox Grid.Row="1"
-                     Text="{Binding LogOutput, UpdateSourceTrigger=PropertyChanged}"
-                     IsReadOnly="True"
-                     TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto"
-                     HorizontalScrollBarVisibility="Auto"
-                     Background="#F7F7F7"
-                     FontFamily="Consolas"
-                     Margin="2"/>
-        </Grid>
+        <Border Grid.Row="1" Grid.Column="2" Margin="0,0,10,0" BorderBrush="#CCC" BorderThickness="1" CornerRadius="4" Background="White" >
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="80" />
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding RequestResponsePairs}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Expander Margin="4">
+                                    <Expander.Header>
+                                        <TextBlock Text="{Binding RequestSummary}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontWeight" Value="Normal"/>
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding StatusCode, Converter={StaticResource IsErrorStatusCodeConverter}}" Value="True">
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Expander.Header>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Request:" FontWeight="Bold" Margin="0,0,0,2" Grid.Row="0"/>
+                                        <TextBox Text="{Binding RequestBody}"
+                                                 IsReadOnly="True"
+                                                 TextWrapping="NoWrap"
+                                                 Background="#F7F7F7"
+                                                 Margin="0,0,0,6"
+                                                 MaxHeight="250"
+                                                 HorizontalAlignment="Stretch"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 Grid.Row="1"/>
+                                        <TextBlock Text="{Binding ResponseSummary}" FontWeight="Bold" Margin="0,0,0,2" Grid.Row="2"/>
+                                        <TextBox Text="{Binding ResponseBody}"
+                                                 IsReadOnly="True"
+                                                 TextWrapping="NoWrap"
+                                                 Background="#FFFBEA"
+                                                 MaxHeight="250"
+                                                 HorizontalAlignment="Stretch"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 Grid.Row="3"/>
+                                    </Grid>
+                                </Expander>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <TextBox Grid.Row="1"
+                         Text="{Binding LogOutput, UpdateSourceTrigger=PropertyChanged}"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         Background="#F7F7F7"
+                         FontFamily="Consolas"
+                         BorderBrush="#CCC"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

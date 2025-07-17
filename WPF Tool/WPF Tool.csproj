@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+    <PackageReference Include="MicrosoftExpressionInteractions" Version="3.0.40218" />
   </ItemGroup>
 
   <ItemGroup>

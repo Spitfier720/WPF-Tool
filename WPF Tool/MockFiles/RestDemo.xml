@@ -1142,33 +1142,7 @@
     <Url>Countries/Details</Url>
     <MethodName>POST</MethodName>
     <ServiceType>REST</ServiceType>
-  </MockNode>
-	  <MockNode>
-    <Request>
-      <RequestBody>
-        <Content>{
-  "countryRequest": {
-    "code": "US"
-  }
-}</Content>
-      </RequestBody>
-    </Request>
-    <Response>
-      <ResponseBody>
-        <Content>[
-  {
-    "name": "United States",
-    "code": "US"
-  }
-]</Content>
-      </ResponseBody>
-      <StatusCode>OK</StatusCode>
-      <Delay>0</Delay>
-    </Response>
-    <Url>Countries</Url>
-    <MethodName>POST</MethodName>
-    <ServiceType>REST</ServiceType>
-  </MockNode>
+  </MockNode> 
 	<MockNode>
 		<Request>
 			<RequestBody>

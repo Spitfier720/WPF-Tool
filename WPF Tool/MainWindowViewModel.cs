@@ -39,6 +39,9 @@ namespace WPF_Tool
         public ICommand StopServiceCommand { get; }
         public ICommand TreeNodeSelectedCommand { get; }
         public ICommand TreeNodeDoubleClickCommand { get; }
+        public ICommand WindowCloseCommand { get; }
+
+        private readonly IDialogService _dialogService;
         private readonly IFileDialogService _fileDialogService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -90,6 +93,8 @@ namespace WPF_Tool
         public bool CanStopService => IsServiceRunning;
         public bool CanLoadMockFile => !IsServiceRunning;
 
+        private bool _unsavedChanges = false;
+
         private const string SimulateExceptionInternalServerError = "InternalServerError";
         private const string SimulateExceptionNotFound = "NotFound";
         private const string SimulateExceptionTimeOut = "TimeOut";
@@ -97,7 +102,7 @@ namespace WPF_Tool
         private HttpListener listener = new HttpListener { Prefixes = { $"http://localhost:{ConfigurationManager.AppSettings["BindingPort"]}/" } };
         private CancellationTokenSource? tokenSource;
 
-        public MainWindowViewModel(IFileDialogService fileDialogService)
+        public MainWindowViewModel(IFileDialogService fileDialogService, IDialogService dialogService)
         {
             //var parser = new MockFileParser(restServiceMatchingConfig, soapServiceMatchingConfig);
             //foreach (var file in Directory.EnumerateFiles(ConfigurationManager.AppSettings["MockFileFolder"], "*.txt"))
@@ -130,6 +135,8 @@ namespace WPF_Tool
             StopServiceCommand = new RelayCommand<object>(_ => StopWebServer(), _ => CanStopService);
             TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
             TreeNodeDoubleClickCommand = new RelayCommand<MockTreeNode>(OnTreeViewItemDoubleClick);
+            WindowCloseCommand = new RelayCommand<object>(OnClose);
+            _dialogService = dialogService;
             _fileDialogService = fileDialogService;
         }
 
@@ -191,6 +198,7 @@ namespace WPF_Tool
             };
 
             RootNodes.Insert(0, new MockTreeNode(mockFileNode));
+            _unsavedChanges = true;
         }
 
         private void StartWebServer()
@@ -427,6 +435,8 @@ namespace WPF_Tool
                     serializer.Serialize(writer, mockFileNode.Nodes);
                 }
             }
+
+            _unsavedChanges = false;
         }
 
         private void OnMockNodeContextMenuAction(object parameter)
@@ -442,9 +452,9 @@ namespace WPF_Tool
             {
                 case "Add":
                     var editor = new MockNodeEditorWindow();
-                    if (editor.ShowDialog() == true)
+                    var vm = editor.DataContext as MockNodeEditorViewModel;
+                    if (vm.OKPressed)
                     {
-                        var vm = editor.EditorViewModel;
                         var newMockNode = new MockNode
                         {
                             MethodName = vm.MethodName,
@@ -473,14 +483,16 @@ namespace WPF_Tool
                             existingFileNode.Nodes.Add(newMockNode);
                             node.Children.Add(new MockTreeNode(newMockNode) { Parent = node });
                         }
+
+                        _unsavedChanges = true;
                     }
                     break;
 
                 case "Edit":
                     if (node.Tag is MockNode mockNodeToEdit)
                     {
-                        // Create and pre-fill the editor ViewModel
-                        var vm = new MockNodeEditorViewModel
+                        editor = new MockNodeEditorWindow();
+                        vm = new MockNodeEditorViewModel
                         {
                             MethodName = mockNodeToEdit.MethodName,
                             Url = mockNodeToEdit.Url,
@@ -496,7 +508,6 @@ namespace WPF_Tool
 
                         if (mockNodeEditor.ShowDialog() == true)
                         {
-                            // Update the existing MockNode with edited values
                             mockNodeToEdit.MethodName = vm.MethodName;
                             mockNodeToEdit.Url = vm.Url;
                             mockNodeToEdit.Request.RequestBody.Content = vm.RequestBody;
@@ -504,8 +515,9 @@ namespace WPF_Tool
                             mockNodeToEdit.Response.Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0;
                             mockNodeToEdit.Response.StatusCode = Enum.TryParse(vm.ResponseStatusCode, out HttpStatusCode status) ? status : HttpStatusCode.OK;
                             mockNodeToEdit.Description = vm.Description;
-                            // Notify UI if needed
                         }
+
+                        _unsavedChanges = true;
                     }
                     break;
 
@@ -536,6 +548,8 @@ namespace WPF_Tool
                         node.Parent.Children.Remove(node);
                     else
                         RootNodes.Remove(node);
+
+                    _unsavedChanges = true;
                     break;
 
                 case "Refresh":
@@ -553,6 +567,8 @@ namespace WPF_Tool
                             RootNodes[index] = new MockTreeNode(refreshedMockFileNode);
                         }
                     }
+
+                    _unsavedChanges = true;
                     break;
 
                 case "Save":
@@ -626,6 +642,23 @@ namespace WPF_Tool
             }
 
             return nodes;
+        }
+
+        private void OnClose(object? args)
+        {
+            if (args is System.ComponentModel.CancelEventArgs e)
+            {
+                if (_unsavedChanges)
+                {
+                    if (!_dialogService.ConfirmCloseWithUnsavedChanges())
+                    {
+                        e.Cancel = true; // Cancel the close operation
+                        return; // User chose not to close
+                    }
+                }
+            }
+
+            Application.Current.Shutdown();
         }
     }
 }

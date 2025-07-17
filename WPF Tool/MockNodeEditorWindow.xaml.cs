@@ -15,23 +15,12 @@ using System.Windows.Shapes;
 
 namespace WPF_Tool
 {
-    /// <summary>
-    /// Interaction logic for Page1.xaml
-    /// </summary>
     public partial class MockNodeEditorWindow : Window
     {
-        public MockNodeEditorViewModel EditorViewModel { get; }
-
         public MockNodeEditorWindow()
         {
             InitializeComponent();
-            EditorViewModel = new MockNodeEditorViewModel();
-            DataContext = EditorViewModel;
-            EditorViewModel.CloseRequested += (s, e) =>
-            {
-                DialogResult = true;
-                Close();
-            };
+            DataContext = new MockNodeEditorViewModel();
         }
     }
 }

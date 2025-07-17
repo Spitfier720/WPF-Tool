@@ -1,10 +1,12 @@
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Input;
 
 namespace WPF_Tool
 {
     public class MockNodeEditorViewModel : INotifyPropertyChanged
     {
+        public double MaxEditorWidth => SystemParameters.WorkArea.Width * 0.8; // 80% of the screen width
         public string MethodName { get => _methodName; set { _methodName = value; OnPropertyChanged(nameof(MethodName)); } }
         public string Url { get => _url; set { _url = value; OnPropertyChanged(nameof(Url)); } }
         public string RequestBody { get => _requestBody; set { _requestBody = value; OnPropertyChanged(nameof(RequestBody)); } }
@@ -19,17 +21,39 @@ namespace WPF_Tool
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         public ICommand OkCommand { get; }
-        public event EventHandler? CloseRequested;
+
+        private bool _OKPressed;
+        public bool OKPressed
+        {
+            get => _OKPressed;
+            set
+            {
+                if (_OKPressed != value)
+                {
+                    _OKPressed = value;
+                    OnPropertyChanged(nameof(OKPressed));
+                }
+            }
+        }
 
         public MockNodeEditorViewModel()
         {
-            OkCommand = new RelayCommand<object>(_ => OnOk());
+            OkCommand = new RelayCommand<object>(OnOk);
         }
 
-        private void OnOk()
+        private void OnOk(object? windowObj)
         {
-            // Validation or data preparation logic here
-            CloseRequested?.Invoke(this, EventArgs.Empty);
+            if (windowObj is Window window)
+            {
+                OKPressed = true;
+                window.DialogResult = true;
+                window.Close();
+            }
+            else
+            {
+                MessageBox.Show("Invalid window object.");
+            }
+            
         }
     }
 }

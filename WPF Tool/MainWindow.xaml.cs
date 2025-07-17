@@ -11,7 +11,7 @@ namespace WPF_Tool
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel(new FileDialogService());
+            DataContext = new MainWindowViewModel(new FileDialogService(), new DialogService());
         }
     }
 }
