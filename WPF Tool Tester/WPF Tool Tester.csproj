@@ -8,8 +8,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MicrosoftExpressionInteractions" Version="3.0.40218" />
-  </ItemGroup>
-
 </Project>

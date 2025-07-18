@@ -1,4 +1,5 @@
 ﻿using EasyMockLib.Models;
+using System.ComponentModel;
 using System.IO;
 
 namespace WPF_Tool
@@ -8,7 +9,7 @@ namespace WPF_Tool
         MockFile,
         MockItem
     }
-    internal class MockTreeNode : TreeNode
+    internal class MockTreeNode : TreeNode, INotifyPropertyChanged
     {
         public MockTreeNode(MockFileNode fileNode)
         {
@@ -30,8 +31,25 @@ namespace WPF_Tool
             Header = $"{node.Url} - {node.MethodName}";
         }
 
-        public bool IsDirty { get; set; }
+        private bool _isDirty;
+        public bool IsDirty
+        {
+            get => _isDirty;
+            set
+            {
+                if (_isDirty != value)
+                {
+                    _isDirty = value;
+                    OnPropertyChanged(nameof(IsDirty));
+                }
+            }
+        }
 
         public NodeTypes NodeType { get; set; }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
     }
 }

@@ -2,11 +2,13 @@
 <ArrayOfMockNode xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <MockNode>
     <Request>
-      <RequestBody />
+      <RequestBody>
+        <Content><![CDATA[]]></Content>
+      </RequestBody>
     </Request>
     <Response>
       <ResponseBody>
-        <Content>[
+        <Content><![CDATA[[
   {
     "name": "Afghanistan",
     "code": "AF"
@@ -983,7 +985,7 @@
     "name": "Zimbabwe",
     "code": "ZW"
   }
-]</Content>
+]]]></Content>
       </ResponseBody>
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
@@ -995,21 +997,21 @@
   <MockNode>
     <Request>
       <RequestBody>
-        <Content>{
+        <Content><![CDATA[{
   "countryRequest": {
     "code": "CA"
   }
-}</Content>
+}]]></Content>
       </RequestBody>
     </Request>
     <Response>
       <ResponseBody>
-        <Content>[
+        <Content><![CDATA[[
   {
     "name": "Canada",
     "code": "CA"
   }
-]</Content>
+]]]></Content>
       </ResponseBody>
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
@@ -1021,21 +1023,21 @@
   <MockNode>
     <Request>
       <RequestBody>
-        <Content>{
+        <Content><![CDATA[{
   "countryRequest": {
     "code": "US"
   }
-}</Content>
+}]]></Content>
       </RequestBody>
     </Request>
     <Response>
       <ResponseBody>
-        <Content>[
+        <Content><![CDATA[[
   {
     "name": "United States",
     "code": "US"
   }
-]</Content>
+]]]></Content>
       </ResponseBody>
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
@@ -1047,7 +1049,7 @@
   <MockNode>
     <Request>
       <RequestBody>
-        <Content>{
+        <Content><![CDATA[{
   "countryRequest": {
     "code": "CA",
     "details": {
@@ -1066,12 +1068,12 @@
     },
     "active": true
   }
-}</Content>
+}]]></Content>
       </RequestBody>
     </Request>
     <Response>
       <ResponseBody>
-        <Content>[
+        <Content><![CDATA[[
   {
     "name": "Canada",
     "code": "CA",
@@ -1089,7 +1091,7 @@
     },
     "active": true
   }
-]</Content>
+]]]></Content>
       </ResponseBody>
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
@@ -1101,7 +1103,7 @@
   <MockNode>
     <Request>
       <RequestBody>
-        <Content>{
+        <Content><![CDATA[{
   "countryRequest": {
     "code": "DE",
     "details": {
@@ -1118,12 +1120,12 @@
     },
     "active": false
   }
-}</Content>
+}]]></Content>
       </RequestBody>
     </Request>
     <Response>
       <ResponseBody>
-        <Content>[  {
+        <Content><![CDATA[[  {
     "name": "Germany",
     "code": "DE",
     "population": 83000000,
@@ -1134,7 +1136,7 @@
     },
     "active": false
   }
-]</Content>
+]]]></Content>
       </ResponseBody>
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>

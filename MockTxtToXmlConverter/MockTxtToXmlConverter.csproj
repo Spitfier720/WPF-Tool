@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="MicrosoftExpressionInteractions" Version="3.0.40218" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,6 +8,7 @@
     <Window.Resources>
         <local:ContextMenuParameterConverter x:Key="ContextMenuParameterConverter"/>
         <local:IsErrorStatusCodeConverter x:Key="IsErrorStatusCodeConverter"/>
+
         <HierarchicalDataTemplate DataType="{x:Type local:TreeNode}" ItemsSource="{Binding Children}">
             <TextBlock Text="{Binding Header}" />
         </HierarchicalDataTemplate>
@@ -137,7 +138,14 @@
             </i:Interaction.Triggers>
             <TreeView.ItemContainerStyle>
                 <Style TargetType="TreeViewItem">
+                    <Setter Property="FontWeight" Value="Normal"/>
                     <Setter Property="ContextMenu" Value="{StaticResource TreeViewItemContextMenu}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsDirty}" Value="True">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <!-- You can also set Background, Foreground, etc. here -->
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
             </TreeView.ItemContainerStyle>
         </TreeView>

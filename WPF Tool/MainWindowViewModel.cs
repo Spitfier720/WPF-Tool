@@ -199,6 +199,7 @@ namespace WPF_Tool
 
             RootNodes.Insert(0, new MockTreeNode(mockFileNode));
             _unsavedChanges = true;
+            MarkNodeDirty((MockTreeNode)RootNodes[0]);
         }
 
         private void StartWebServer()
@@ -453,7 +454,7 @@ namespace WPF_Tool
                 case "Add":
                     var editor = new MockNodeEditorWindow();
                     var vm = editor.DataContext as MockNodeEditorViewModel;
-                    if (vm.OKPressed)
+                    if (editor.ShowDialog() == true)
                     {
                         var newMockNode = new MockNode
                         {
@@ -485,6 +486,7 @@ namespace WPF_Tool
                         }
 
                         _unsavedChanges = true;
+                        MarkNodeDirty(node);
                     }
                     break;
 
@@ -518,6 +520,7 @@ namespace WPF_Tool
                         }
 
                         _unsavedChanges = true;
+                        MarkNodeDirty(node);
                     }
                     break;
 
@@ -539,10 +542,7 @@ namespace WPF_Tool
                     }
                     else
                     {
-                        var root = node;
-                        while (root.Tag as MockFileNode == null && root.Parent != null)
-                            root = (MockTreeNode)root.Parent;
-                        root.IsDirty = true;
+                        MarkNodeDirty(node);
                     }
                     if (node.Parent != null)
                         node.Parent.Children.Remove(node);
@@ -658,6 +658,14 @@ namespace WPF_Tool
             }
 
             Application.Current.Shutdown();
+        }
+
+        private void MarkNodeDirty(MockTreeNode node)
+        {
+            var root = node;
+            while (root.Tag as MockFileNode == null && root.Parent != null)
+                root = (MockTreeNode)root.Parent;
+            root.IsDirty = true;
         }
     }
 }
