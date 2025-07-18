@@ -568,7 +568,6 @@ namespace WPF_Tool
                         }
                     }
 
-                    _unsavedChanges = true;
                     break;
 
                 case "Save":
