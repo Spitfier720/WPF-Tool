@@ -51,7 +51,7 @@
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
     </Response>
-    <Url>ProfileService</Url>
+    <Url>/ProfileService</Url>
     <MethodName>GetProfile</MethodName>
     <ServiceType>SOAP</ServiceType>
   </MockNode>
@@ -106,7 +106,7 @@
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
     </Response>
-    <Url>ProfileService</Url>
+    <Url>/ProfileService</Url>
     <MethodName>GetProfile</MethodName>
     <ServiceType>SOAP</ServiceType>
   </MockNode>

@@ -43,6 +43,27 @@ namespace WPF_Tool
 
         private void OnOk(object? windowObj)
         {
+            if (string.IsNullOrWhiteSpace(MethodName))
+            {
+                MessageBox.Show("Method Name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(Url))
+            {
+                MessageBox.Show("URL is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!string.IsNullOrWhiteSpace(ResponseDelay) && (!int.TryParse(ResponseDelay, out int delay) || delay < 0))
+            {
+                MessageBox.Show("Response Delay must be a non-negative integer.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!Enum.TryParse(typeof(System.Net.HttpStatusCode), ResponseStatusCode, true, out var statusCode) || !Enum.IsDefined(typeof(System.Net.HttpStatusCode), statusCode))
+            {
+                MessageBox.Show("Response Status Code must be a valid HTTP status code (e.g., 200, OK, NotFound).", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (windowObj is Window window)
             {
                 OKPressed = true;

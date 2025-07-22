@@ -27,7 +27,7 @@ namespace EasyMockLib.Models
             var mocks = this.Nodes.Where(m =>
             m.ServiceType == serviceType &&
             m.MethodName.Equals(method, StringComparison.OrdinalIgnoreCase) &&
-            MatchUrl(m, url, method));
+            m.Url.Equals(url, StringComparison.OrdinalIgnoreCase));
 
             if (mocks.Any())
             {
@@ -49,30 +49,6 @@ namespace EasyMockLib.Models
                 }
             }
             return null;
-        }
-
-        private bool MatchUrl(MockNode mock, string url, string method)
-        {
-            return mock.Url.EndsWith(UriPath(url, method), StringComparison.OrdinalIgnoreCase);
-        }
-
-        private string UriPath(string pathAndQuery, string method)
-        {
-            if (method.Equals(HttpMethod.Get.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                if (pathAndQuery.IndexOf("?") == -1)
-                {
-                    return pathAndQuery;
-                }
-                else
-                {
-                    return pathAndQuery.Substring(0, pathAndQuery.IndexOf("?"));
-                }
-            }
-            else
-            {
-                return pathAndQuery;
-            }
         }
     }
 }
