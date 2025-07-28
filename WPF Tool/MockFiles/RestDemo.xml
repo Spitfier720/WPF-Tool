@@ -990,7 +990,7 @@
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
     </Response>
-    <Url>Countries</Url>
+    <Url>/Countries</Url>
     <MethodName>GET</MethodName>
     <ServiceType>REST</ServiceType>
   </MockNode>
@@ -1016,7 +1016,7 @@
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
     </Response>
-    <Url>Countries</Url>
+    <Url>/Countries</Url>
     <MethodName>POST</MethodName>
     <ServiceType>REST</ServiceType>
   </MockNode>
@@ -1042,7 +1042,7 @@
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
     </Response>
-    <Url>Countries</Url>
+    <Url>/Countries</Url>
     <MethodName>POST</MethodName>
     <ServiceType>REST</ServiceType>
   </MockNode>
@@ -1096,7 +1096,7 @@
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
     </Response>
-    <Url>Countries/Details</Url>
+    <Url>/Countries/Details</Url>
     <MethodName>POST</MethodName>
     <ServiceType>REST</ServiceType>
   </MockNode>
@@ -1141,7 +1141,7 @@
       <StatusCode>OK</StatusCode>
       <Delay>0</Delay>
     </Response>
-    <Url>Countries/Details</Url>
+    <Url>/Countries/Details</Url>
     <MethodName>POST</MethodName>
     <ServiceType>REST</ServiceType>
   </MockNode>

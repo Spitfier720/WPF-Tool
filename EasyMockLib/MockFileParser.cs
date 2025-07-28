@@ -127,7 +127,7 @@ namespace EasyMockLib
             response.ResponseBody.Content = xml + "\r\n" + response.ResponseBody.Content;
             pendingRequests.Remove(requestTuple);
             return new MockNode() {
-                Url = url.Replace("http://localhost:8888", "").Trim('/'),
+                Url = new Uri(url).PathAndQuery,
                 MethodName = methodName,
                 ServiceType = ServiceType.SOAP,
                 Request = requestTuple.Request, 
@@ -153,7 +153,7 @@ namespace EasyMockLib
             var response = ReadRestResponseBlock(reader);
             pendingRequests.Remove(requestTuple);
             return new MockNode() {
-                Url = url.Replace("http://localhost:8888", "").Trim('/'),
+                Url = new Uri(url).PathAndQuery,
                 MethodName = methodName,
                 ServiceType = ServiceType.REST,
                 Request = requestTuple.Request, 

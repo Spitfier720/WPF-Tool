@@ -202,8 +202,6 @@ namespace WPF_Tool
             };
 
             RootNodes.Insert(0, new MockTreeNode(mockFileNode));
-            _unsavedChanges = true;
-            MarkNodeDirty((MockTreeNode)RootNodes[0]);
         }
 
         private void StartWebServer()
@@ -305,18 +303,17 @@ namespace WPF_Tool
             MockNode mock = null;
             string requestContent = ReadRequest(context);
             string method = context.Request.HttpMethod.ToString();
-            if (context.Request.HttpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase) || context.Request.ContentType.StartsWith("application/json"))
+            if (context.Request.ContentType.StartsWith("application/json"))
             {
                 // REST request
                 method = context.Request.HttpMethod.ToString();
-                string url = context.Request.Url.AbsolutePath.Substring(context.Request.Url.AbsolutePath.LastIndexOf('/') + 1);
-                mock = GetMock(ServiceType.REST, url, method, requestContent, restMatchPolicy);
+                mock = GetMock(ServiceType.REST, context.Request.Url.PathAndQuery, method, requestContent, restMatchPolicy);
             }
             else if (context.Request.ContentType.StartsWith("text/xml"))
             {
                 // SOAP request
                 method = GetSoapAction(requestContent);
-                mock = GetMock(ServiceType.SOAP, context.Request.Url.AbsolutePath.Substring(context.Request.Url.AbsolutePath.LastIndexOf('/') + 1), method, requestContent, soapMatchPolicy);
+                mock = GetMock(ServiceType.SOAP, context.Request.Url.PathAndQuery, method, requestContent, soapMatchPolicy);
             }
             else
             {
@@ -521,10 +518,11 @@ namespace WPF_Tool
                             mockNodeToEdit.Response.Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0;
                             mockNodeToEdit.Response.StatusCode = Enum.TryParse(vm.ResponseStatusCode, out HttpStatusCode status) ? status : HttpStatusCode.OK;
                             mockNodeToEdit.Description = vm.Description;
+
+                            _unsavedChanges = true;
+                            MarkNodeDirty(node);
                         }
 
-                        _unsavedChanges = true;
-                        MarkNodeDirty(node);
                     }
                     break;
 
@@ -546,6 +544,13 @@ namespace WPF_Tool
                     }
                     else
                     {
+                        var root = node;
+                        while(root.Tag as MockFileNode == null && root.Parent != null)
+                            root = (MockTreeNode)root.Parent;
+
+                        if(root.Tag is MockFileNode mockFileNode && node.Tag is MockNode mockNode)
+                            mockFileNode.Nodes.Remove(mockNode);
+
                         MarkNodeDirty(node);
                     }
                     if (node.Parent != null)
