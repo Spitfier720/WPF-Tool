@@ -41,12 +41,6 @@ namespace EasyMockLib.Models
                 {
                     return matchingMock;
                 }
-
-                else
-                {
-                    // If no matching mock found, return the first one as a fallback
-                    return mocks.First();
-                }
             }
             return null;
         }

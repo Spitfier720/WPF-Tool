@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using EasyMockLib.Models;
 using System.Windows;
 using System.Windows.Input;
 
@@ -7,6 +8,22 @@ namespace WPF_Tool
     public class MockNodeEditorViewModel : INotifyPropertyChanged
     {
         public double MaxEditorWidth => SystemParameters.WorkArea.Width * 0.8; // 80% of the screen width
+
+        public List<ServiceType> ServiceTypes { get; } = new() { ServiceType.REST, ServiceType.SOAP };
+
+        private ServiceType _serviceType = ServiceType.REST;
+        public ServiceType ServiceType
+        {
+            get => _serviceType;
+            set
+            {
+                if (_serviceType != value)
+                {
+                    _serviceType = value;
+                    OnPropertyChanged(nameof(ServiceType));
+                }
+            }
+        }
         public string MethodName { get => _methodName; set { _methodName = value; OnPropertyChanged(nameof(MethodName)); } }
         public string Url { get => _url; set { _url = value; OnPropertyChanged(nameof(Url)); } }
         public string RequestBody { get => _requestBody; set { _requestBody = value; OnPropertyChanged(nameof(RequestBody)); } }

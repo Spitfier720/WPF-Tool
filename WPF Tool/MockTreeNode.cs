@@ -47,6 +47,30 @@ namespace WPF_Tool
 
         public NodeTypes NodeType { get; set; }
 
+        public int StatusCodeForHighlight
+        {
+            get
+            {
+                if (Tag is MockNode mockNode)
+                    return (int)mockNode.Response?.StatusCode;
+                return 200; // Default to OK for non-MockNode nodes
+            }
+        }
+
+        private bool _isHovered;
+        public bool IsHovered
+        {
+            get => _isHovered;
+            set
+            {
+                if (_isHovered != value)
+                {
+                    _isHovered = value;
+                    OnPropertyChanged(nameof(IsHovered));
+                }
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

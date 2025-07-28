@@ -143,7 +143,13 @@
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsDirty}" Value="True">
                             <Setter Property="FontWeight" Value="Bold"/>
-                            <!-- You can also set Background, Foreground, etc. here -->
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding StatusCodeForHighlight, Converter={StaticResource IsErrorStatusCodeConverter}}" Value="True">
+                            <Setter Property="Foreground" Value="Red"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsHovered}" Value="True">
+                            <Setter Property="FontWeight" Value="Bold"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -171,9 +177,17 @@
                             <DataTemplate>
                                 <Expander Margin="4">
                                     <Expander.Header>
-                                        <TextBlock Text="{Binding RequestSummary}">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
+                                        <TextBox Text="{Binding RequestSummary}"
+                                            IsReadOnly="True"
+                                            BorderThickness="0"
+                                            Background="Transparent"
+                                            FontWeight="Normal"
+                                            Foreground="Black"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Stretch">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
                                                     <Setter Property="FontWeight" Value="Normal"/>
                                                     <Setter Property="Foreground" Value="Black"/>
                                                     <Style.Triggers>
@@ -183,8 +197,8 @@
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                            </TextBox.Style>
+                                        </TextBox>
                                     </Expander.Header>
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -213,7 +227,18 @@
                                                  HorizontalAlignment="Stretch"
                                                  VerticalScrollBarVisibility="Auto"
                                                  HorizontalScrollBarVisibility="Auto"
-                                                 Grid.Row="3"/>
+                                                 Grid.Row="3">
+                                            <i:Interaction.Triggers>
+                                                <i:EventTrigger EventName="MouseEnter">
+                                                    <i:InvokeCommandAction Command="{Binding DataContext.ResponseBodyMouseEnterCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                           CommandParameter="{Binding}" />
+                                                </i:EventTrigger>
+                                                <i:EventTrigger EventName="MouseLeave">
+                                                    <i:InvokeCommandAction Command="{Binding DataContext.ResponseBodyMouseLeaveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                           CommandParameter="{Binding}" />
+                                                </i:EventTrigger>
+                                            </i:Interaction.Triggers>
+                                        </TextBox>
                                     </Grid>
                                 </Expander>
                             </DataTemplate>

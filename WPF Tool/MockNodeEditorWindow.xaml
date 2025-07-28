@@ -17,6 +17,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel>
+            <TextBlock Text="Service Type:"/>
+            <ComboBox ItemsSource="{Binding ServiceTypes}"
+                      SelectedItem="{Binding ServiceType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      Margin="0,0,0,8"/>
             <TextBlock Text="Method Name:"/>
             <TextBox Text="{Binding MethodName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
             <TextBlock Text="Url:"/>
@@ -38,7 +42,15 @@
             <TextBlock Text="Response Delay (s):"/>
             <TextBox Text="{Binding ResponseDelay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
             <TextBlock Text="Response Status Code:"/>
-            <TextBox Text="{Binding ResponseStatusCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
+            <ComboBox SelectedItem="{Binding ResponseStatusCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8">
+                <ComboBoxItem Content="200 - OK" />
+                <ComboBoxItem Content="400 - Bad Request" />
+                <ComboBoxItem Content="401 - Unauthorized" />
+                <ComboBoxItem Content="403 - Forbidden" />
+                <ComboBoxItem Content="404 - Not Found" />
+                <ComboBoxItem Content="500 - Internal Server Error" />
+                <ComboBoxItem Content="502 - Bad Gateway" />
+            </ComboBox>
             <TextBlock Text="Description:"/>
             <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
         </StackPanel>

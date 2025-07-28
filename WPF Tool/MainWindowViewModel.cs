@@ -40,6 +40,8 @@ namespace WPF_Tool
         public ICommand TreeNodeSelectedCommand { get; }
         public ICommand TreeNodeDoubleClickCommand { get; }
         public ICommand WindowCloseCommand { get; }
+        public ICommand ResponseBodyMouseEnterCommand { get; }
+        public ICommand ResponseBodyMouseLeaveCommand { get; }
 
         private readonly IDialogService _dialogService;
         private readonly IFileDialogService _fileDialogService;
@@ -136,6 +138,8 @@ namespace WPF_Tool
             TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
             TreeNodeDoubleClickCommand = new RelayCommand<MockTreeNode>(OnTreeViewItemDoubleClick);
             WindowCloseCommand = new RelayCommand<object>(OnClose);
+            ResponseBodyMouseEnterCommand = new RelayCommand<RequestResponsePair>(OnResponseBodyMouseEnter);
+            ResponseBodyMouseLeaveCommand = new RelayCommand<RequestResponsePair>(OnResponseBodyMouseLeave);
             _dialogService = dialogService;
             _fileDialogService = fileDialogService;
         }
@@ -593,6 +597,8 @@ namespace WPF_Tool
                     StatusCode = statusCode
                 });
             });
+
+            OnPropertyChanged(nameof(RequestResponsePairs));
         }
 
         private List<MockNode> ParseXML(string filepath)
@@ -666,6 +672,55 @@ namespace WPF_Tool
             while (root.Tag as MockFileNode == null && root.Parent != null)
                 root = (MockTreeNode)root.Parent;
             root.IsDirty = true;
+        }
+
+        private void OnResponseBodyMouseEnter(RequestResponsePair pair)
+        {
+            var node = FindMockNodeByResponse(pair.ResponseBody) as MockTreeNode;
+            if (node != null)
+                node.IsHovered = true;
+        }
+
+        private void OnResponseBodyMouseLeave(RequestResponsePair pair)
+        {
+            var node = FindMockNodeByResponse(pair.ResponseBody) as MockTreeNode;
+            if (node != null)
+                node.IsHovered = false;
+        }
+
+        private TreeNode FindMockNodeByResponse(string responseBody)
+        {
+            foreach (var rootNode in RootNodes)
+            {
+                var foundNode = FindMockNodeByResponseRecursive(rootNode, responseBody);
+                if (foundNode != null)
+                    return foundNode;
+            }
+            return null;
+        }
+
+        private TreeNode FindMockNodeByResponseRecursive(TreeNode currentNode, string responseBody)
+        {
+            if (currentNode is MockTreeNode mockTreeNode)
+            {
+                var mockNode = mockTreeNode.Tag as MockNode;
+                if (mockNode != null && mockNode.Response != null && mockNode.Response.ResponseBody != null)
+                {
+                    // Compare the response bodies (you might need to adjust this comparison based on your requirements)
+                    if (mockNode.Response.ResponseBody.Content == responseBody)
+                        return mockTreeNode;
+                }
+            }
+
+            // Recurse into children
+            foreach (var child in currentNode.Children)
+            {
+                var foundNode = FindMockNodeByResponseRecursive(child, responseBody);
+                if (foundNode != null)
+                    return foundNode;
+            }
+
+            return null;
         }
     }
 }
