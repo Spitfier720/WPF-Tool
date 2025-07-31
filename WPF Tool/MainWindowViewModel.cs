@@ -97,10 +97,6 @@ namespace WPF_Tool
 
         private bool _unsavedChanges = false;
 
-        private const string SimulateExceptionInternalServerError = "InternalServerError";
-        private const string SimulateExceptionNotFound = "NotFound";
-        private const string SimulateExceptionTimeOut = "TimeOut";
-
         private HttpListener listener = new HttpListener { Prefixes = { $"http://localhost:{ConfigurationManager.AppSettings["BindingPort"]}/" } };
         private CancellationTokenSource? tokenSource;
 
@@ -459,6 +455,7 @@ namespace WPF_Tool
                     {
                         var newMockNode = new MockNode
                         {
+                            ServiceType = vm.ServiceType,
                             MethodName = vm.MethodName,
                             Url = vm.Url,
                             Description = vm.Description,
@@ -475,7 +472,7 @@ namespace WPF_Tool
                                 {
                                     Content = vm.ResponseBody
                                 },
-                                StatusCode = Enum.TryParse(vm.ResponseStatusCode, out HttpStatusCode status) ? status : HttpStatusCode.OK,
+                                StatusCode = (HttpStatusCode)vm.SelectedStatusCodeOption.Code,
                                 Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0
                             }
                         };
@@ -497,26 +494,35 @@ namespace WPF_Tool
                         editor = new MockNodeEditorWindow();
                         vm = new MockNodeEditorViewModel
                         {
+                            ServiceType = mockNodeToEdit.ServiceType,
                             MethodName = mockNodeToEdit.MethodName,
                             Url = mockNodeToEdit.Url,
                             RequestBody = mockNodeToEdit.Request.RequestBody?.Content,
                             ResponseBody = mockNodeToEdit.Response.ResponseBody?.Content,
                             ResponseDelay = mockNodeToEdit.Response.Delay.ToString(),
-                            ResponseStatusCode = mockNodeToEdit.Response.StatusCode.ToString(),
+                            SelectedStatusCodeOption = new StatusCodeOption
+                            {
+                                Code = (int)mockNodeToEdit.Response.StatusCode,
+                                Name = mockNodeToEdit.Response.StatusCode.ToString()
+                            },
                             Description = mockNodeToEdit.Description
                         };
+
+                        vm.SelectedStatusCodeOption = vm.StatusCodeOptions
+                            .FirstOrDefault(o => o.Code == (int)mockNodeToEdit.Response.StatusCode);
 
                         var mockNodeEditor = new MockNodeEditorWindow();
                         mockNodeEditor.DataContext = vm;
 
                         if (mockNodeEditor.ShowDialog() == true)
                         {
+                            mockNodeToEdit.ServiceType = vm.ServiceType;
                             mockNodeToEdit.MethodName = vm.MethodName;
                             mockNodeToEdit.Url = vm.Url;
                             mockNodeToEdit.Request.RequestBody.Content = vm.RequestBody;
                             mockNodeToEdit.Response.ResponseBody.Content = vm.ResponseBody;
                             mockNodeToEdit.Response.Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0;
-                            mockNodeToEdit.Response.StatusCode = Enum.TryParse(vm.ResponseStatusCode, out HttpStatusCode status) ? status : HttpStatusCode.OK;
+                            mockNodeToEdit.Response.StatusCode = (HttpStatusCode)vm.SelectedStatusCodeOption.Code;
                             mockNodeToEdit.Description = vm.Description;
 
                             _unsavedChanges = true;
@@ -610,44 +616,62 @@ namespace WPF_Tool
         {
             var serializer = new XmlSerializer(typeof(List<MockNode>));
             List<MockNode> nodes;
-            using (var xml = File.OpenRead(filepath))
+            try
             {
-                nodes = (List<MockNode>)serializer.Deserialize(xml);
+
+                using (var xml = File.OpenRead(filepath))
+                {
+                    nodes = (List<MockNode>)serializer.Deserialize(xml);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load mock file '{filepath}':\n{ex.Message}", "File Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return new List<MockNode>();
             }
 
             // Dedent and assign ContentObject for each node's request and response body
             foreach (var mockNode in nodes)
             {
-                DedentRequestResponse(mockNode);
-
-                if (mockNode.Request?.RequestBody?.Content != null)
+                try
                 {
-                    var content = mockNode.Request.RequestBody.Content.Trim();
-                    if (mockNode.ServiceType == ServiceType.REST)
+
+
+                    DedentRequestResponse(mockNode);
+
+                    if (mockNode.Request?.RequestBody?.Content != null)
                     {
-                        try { mockNode.Request.RequestBody.ContentObject = JToken.Parse(content); }
-                        catch { mockNode.Request.RequestBody.ContentObject = null; }
+                        var content = mockNode.Request.RequestBody.Content.Trim();
+                        if (mockNode.ServiceType == ServiceType.REST)
+                        {
+                            try { mockNode.Request.RequestBody.ContentObject = JToken.Parse(content); }
+                            catch { mockNode.Request.RequestBody.ContentObject = null; }
+                        }
+                        else if (mockNode.ServiceType == ServiceType.SOAP)
+                        {
+                            try { mockNode.Request.RequestBody.ContentObject = XElement.Parse(content); }
+                            catch { mockNode.Request.RequestBody.ContentObject = null; }
+                        }
                     }
-                    else if (mockNode.ServiceType == ServiceType.SOAP)
+
+                    if (mockNode.Response?.ResponseBody?.Content != null)
                     {
-                        try { mockNode.Request.RequestBody.ContentObject = XElement.Parse(content); }
-                        catch { mockNode.Request.RequestBody.ContentObject = null; }
+                        var content = mockNode.Response.ResponseBody.Content.Trim();
+                        if (mockNode.ServiceType == ServiceType.REST)
+                        {
+                            try { mockNode.Response.ResponseBody.ContentObject = JToken.Parse(content); }
+                            catch { mockNode.Response.ResponseBody.ContentObject = null; }
+                        }
+                        else if (mockNode.ServiceType == ServiceType.SOAP)
+                        {
+                            try { mockNode.Response.ResponseBody.ContentObject = XElement.Parse(content); }
+                            catch { mockNode.Response.ResponseBody.ContentObject = null; }
+                        }
                     }
                 }
-
-                if (mockNode.Response?.ResponseBody?.Content != null)
+                catch (Exception ex)
                 {
-                    var content = mockNode.Response.ResponseBody.Content.Trim();
-                    if (mockNode.ServiceType == ServiceType.REST)
-                    {
-                        try { mockNode.Response.ResponseBody.ContentObject = JToken.Parse(content); }
-                        catch { mockNode.Response.ResponseBody.ContentObject = null; }
-                    }
-                    else if (mockNode.ServiceType == ServiceType.SOAP)
-                    {
-                        try { mockNode.Response.ResponseBody.ContentObject = XElement.Parse(content); }
-                        catch { mockNode.Response.ResponseBody.ContentObject = null; }
-                    }
+                    MessageBox.Show($"Error processing mock node in '{filepath}':\n{ex.Message}", "MockNode Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
 

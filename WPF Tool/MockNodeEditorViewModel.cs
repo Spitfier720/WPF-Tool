@@ -1,5 +1,6 @@
-using System.ComponentModel;
 using EasyMockLib.Models;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 
@@ -29,7 +30,20 @@ namespace WPF_Tool
         public string RequestBody { get => _requestBody; set { _requestBody = value; OnPropertyChanged(nameof(RequestBody)); } }
         public string ResponseBody { get => _responseBody; set { _responseBody = value; OnPropertyChanged(nameof(ResponseBody)); } }
         public string ResponseDelay { get => _responseDelay; set { _responseDelay = value; OnPropertyChanged(nameof(ResponseDelay)); } }
-        public string ResponseStatusCode { get => _responseStatusCode; set { _responseStatusCode = value; OnPropertyChanged(nameof(ResponseStatusCode)); } }
+        public ObservableCollection<StatusCodeOption> StatusCodeOptions { get; }
+        private StatusCodeOption _selectedStatusCodeOption;
+        public StatusCodeOption SelectedStatusCodeOption
+        {
+            get => _selectedStatusCodeOption;
+            set
+            {
+                if (_selectedStatusCodeOption != value)
+                {
+                    _selectedStatusCodeOption = value;
+                    OnPropertyChanged(nameof(SelectedStatusCodeOption));
+                }
+            }
+        }
         public string Description { get => _description; set { _description = value; OnPropertyChanged(nameof(Description)); } }
 
         private string _methodName, _url, _requestBody, _responseBody, _responseDelay, _responseStatusCode, _description;
@@ -56,6 +70,17 @@ namespace WPF_Tool
         public MockNodeEditorViewModel()
         {
             OkCommand = new RelayCommand<object>(OnOk);
+
+            StatusCodeOptions = new ObservableCollection<StatusCodeOption>
+            {
+                new StatusCodeOption { Code = 200, Name = "OK" },
+                new StatusCodeOption { Code = 400, Name = "BadRequest" },
+                new StatusCodeOption { Code = 401, Name = "Unauthorized" },
+                new StatusCodeOption { Code = 403, Name = "Forbidden" },
+                new StatusCodeOption { Code = 404, Name = "NotFound" },
+                new StatusCodeOption { Code = 500, Name = "InternalServerError" },
+                new StatusCodeOption { Code = 502, Name = "BadGateway" }
+            };
         }
 
         private void OnOk(object? windowObj)
@@ -73,11 +98,6 @@ namespace WPF_Tool
             if (!string.IsNullOrWhiteSpace(ResponseDelay) && (!int.TryParse(ResponseDelay, out int delay) || delay < 0))
             {
                 MessageBox.Show("Response Delay must be a non-negative integer.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            if (!Enum.TryParse(typeof(System.Net.HttpStatusCode), ResponseStatusCode, true, out var statusCode) || !Enum.IsDefined(typeof(System.Net.HttpStatusCode), statusCode))
-            {
-                MessageBox.Show("Response Status Code must be a valid HTTP status code (e.g., 200, OK, NotFound).", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
