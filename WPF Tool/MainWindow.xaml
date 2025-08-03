@@ -151,6 +151,9 @@
                         <DataTrigger Binding="{Binding IsHovered}" Value="True">
                             <Setter Property="FontWeight" Value="Bold"/>
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding IsDescendantError}" Value="True">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </TreeView.ItemContainerStyle>
@@ -181,8 +184,6 @@
                                             IsReadOnly="True"
                                             BorderThickness="0"
                                             Background="Transparent"
-                                            FontWeight="Normal"
-                                            Foreground="Black"
                                             Padding="0"
                                             VerticalAlignment="Center"
                                             HorizontalAlignment="Stretch">
@@ -202,6 +203,7 @@
                                     </Expander.Header>
                                     <Grid>
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
@@ -237,8 +239,13 @@
                                                     <i:InvokeCommandAction Command="{Binding DataContext.ResponseBodyMouseLeaveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                            CommandParameter="{Binding}" />
                                                 </i:EventTrigger>
+                                                <i:EventTrigger EventName="MouseDoubleClick">
+                                                    <i:InvokeCommandAction Command="{Binding DataContext.TreeNodeDoubleClickCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                           CommandParameter="{Binding}" />
+                                                </i:EventTrigger>
                                             </i:Interaction.Triggers>
                                         </TextBox>
+                                        <TextBlock Text="{Binding MockFileSource, StringFormat=MockFile Source: {0}}" FontWeight="Bold" Margin="0,0,0,2" Grid.Row="4" />
                                     </Grid>
                                 </Expander>
                             </DataTemplate>

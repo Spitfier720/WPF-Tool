@@ -132,7 +132,7 @@ namespace WPF_Tool
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
             StopServiceCommand = new RelayCommand<object>(_ => StopWebServer(), _ => CanStopService);
             TreeNodeSelectedCommand = new RelayCommand<TreeNode>(OnTreeNodeSelected);
-            TreeNodeDoubleClickCommand = new RelayCommand<MockTreeNode>(OnTreeViewItemDoubleClick);
+            TreeNodeDoubleClickCommand = new RelayCommand<object>(OnTreeViewItemDoubleClick);
             WindowCloseCommand = new RelayCommand<object>(OnClose);
             ResponseBodyMouseEnterCommand = new RelayCommand<RequestResponsePair>(OnResponseBodyMouseEnter);
             ResponseBodyMouseLeaveCommand = new RelayCommand<RequestResponsePair>(OnResponseBodyMouseLeave);
@@ -248,19 +248,24 @@ namespace WPF_Tool
                     //var handled = false;
                     (var mock, var method, var requestContent) = GetMock(context);
 
+                    requestContent = FormatRequestContent(requestContent);
+
                     if (mock != null)
                     {
                         string requestSummary = $"{method} {context.Request.Url.AbsoluteUri}";
                         string requestBody = requestContent;
                         string responseSummary = $"StatusCode: {mock.Response.StatusCode}";
                         string responseBody = mock.Response.ResponseBody?.Content ?? string.Empty;
+                        string mockFileSource = (FindMockNodeByResponse(responseBody) as MockTreeNode)?.Parent?.Tag is MockFileNode fileNode
+                            ? fileNode.MockFile
+                            : string.Empty;
 
-                        if(mock.Response.Delay != 0)
+                        if (mock.Response.Delay != 0)
                             AppendOutput("Sleeping for " + mock.Response.Delay + " seconds...");
                         Thread.Sleep(mock.Response.Delay * 1000);
                         OutputMockResponse(mock, context, response);
 
-                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody, (int)mock.Response.StatusCode);
+                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody, (int)mock.Response.StatusCode, mockFileSource);
                     }
                     else
                     {
@@ -382,43 +387,27 @@ namespace WPF_Tool
                 if (treeNode.NodeType == NodeTypes.MockItem)
                 {
                     var node = treeNode.Tag as MockNode;
-
-                    //if (node?.Request.ServiceType == ServiceType.SOAP)
-                    //{
-                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
-                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
-                    //}
-                    //else
-                    //{
-                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.MethodName} {node.Url} Request\r\n{node.Request.RequestBody.Content}\r\n\r\n");
-                    //    AppendOutput($"{DateTime.Now:HH:mm:ss.fffffff} {node.Url} {node.Request.ServiceName} Response\r\n");
-                    //}
-
-                    //if (node.Response != null)
-                    //{
-                    //    if (node.Response.StatusCode != HttpStatusCode.OK)
-                    //    {
-                    //        AppendOutput(node.Response.StatusCode + "\r\n\r\n");
-                    //        if (node.Response.ResponseBody.Content != null)
-                    //        {
-                    //            AppendOutput(node.Response.ResponseBody.Content + "\r\n\r\n");
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        AppendOutput(node.Response.ResponseBody.Content + "\r\n\r\n");
-                    //    }
-                    //}
                 }
             }
         }
 
-        private void OnTreeViewItemDoubleClick(MockTreeNode node)
+        private void OnTreeViewItemDoubleClick(object parameter)
         {
+            MockTreeNode node = null;
+
+            if (parameter is MockTreeNode treeNode)
+            {
+                node = treeNode;
+            }
+            else if (parameter is RequestResponsePair pair)
+            {
+                node = FindMockNodeByResponse(pair.ResponseBody) as MockTreeNode;
+            }
+            
             if (node == null) return;
+
             else if (node.NodeType == NodeTypes.MockItem)
             {
-                // If it's a mock item, open the editor
                 OnMockNodeContextMenuAction(new Tuple<string, MockTreeNode>("Edit", node));
             }
         }
@@ -595,7 +584,7 @@ namespace WPF_Tool
         {
             LogOutput += message + Environment.NewLine;
         }
-        public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody, int statusCode)
+        public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody, int statusCode, string mockFileSource = "")
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -605,7 +594,8 @@ namespace WPF_Tool
                     RequestBody = requestBody,
                     ResponseSummary = responseSummary,
                     ResponseBody = responseBody,
-                    StatusCode = statusCode
+                    StatusCode = statusCode,
+                    MockFileSource = mockFileSource
                 });
             });
 
@@ -707,14 +697,20 @@ namespace WPF_Tool
         {
             var node = FindMockNodeByResponse(pair.ResponseBody) as MockTreeNode;
             if (node != null)
+            {
                 node.IsHovered = true;
+                node.UpdateAncestorErrorStates(node.Parent as MockTreeNode);
+            }
         }
 
         private void OnResponseBodyMouseLeave(RequestResponsePair pair)
         {
             var node = FindMockNodeByResponse(pair.ResponseBody) as MockTreeNode;
             if (node != null)
+            {
                 node.IsHovered = false;
+                node.UpdateAncestorErrorStates(node.Parent as MockTreeNode);
+            }
         }
 
         private TreeNode FindMockNodeByResponse(string responseBody)
@@ -750,6 +746,36 @@ namespace WPF_Tool
             }
 
             return null;
+        }
+
+        private string FormatRequestContent(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return string.Empty;
+
+            content = content.Trim();
+
+            try
+            {
+                if (content.StartsWith("{") || content.StartsWith("["))
+                {
+                    // JSON
+                    var parsed = Newtonsoft.Json.Linq.JToken.Parse(content);
+                    return parsed.ToString(Newtonsoft.Json.Formatting.Indented);
+                }
+                else if (content.StartsWith("<"))
+                {
+                    // XML
+                    var parsed = System.Xml.Linq.XElement.Parse(content);
+                    return parsed.ToString();
+                }
+            }
+            catch
+            {
+                // If parsing fails, return original content
+            }
+
+            return content;
         }
     }
 }

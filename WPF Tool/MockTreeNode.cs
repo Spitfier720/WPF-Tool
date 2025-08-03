@@ -71,6 +71,31 @@ namespace WPF_Tool
             }
         }
 
+        private bool _isDescendantError;
+        public bool IsDescendantError
+        {
+            get => _isDescendantError;
+            set
+            {
+                if (_isDescendantError != value)
+                {
+                    _isDescendantError = value;
+                    OnPropertyChanged(nameof(IsDescendantError));
+                }
+            }
+        }
+
+        public void UpdateAncestorErrorStates(MockTreeNode node)
+        {
+            while (node != null)
+            {
+                node.IsDescendantError = node.Children.OfType<MockTreeNode>().Any(
+                    child => child.IsDescendantError || child.StatusCodeForHighlight != 200 || child.IsHovered
+                );
+                node = node.Parent as MockTreeNode;
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

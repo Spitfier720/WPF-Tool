@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Net;
 using System.Windows.Data;
 
 namespace WPF_Tool
@@ -8,14 +9,17 @@ namespace WPF_Tool
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            // Handles both int and HttpStatusCode
             if (value is int code)
-                return code < 200 || code > 299;
-            if (value is string str && int.TryParse(str, out int code2))
-                return code2 < 200 || code2 > 299;
+                return code != 200;
+            if (value is HttpStatusCode status)
+                return status != HttpStatusCode.OK;
             return false;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+        {
+            throw new NotImplementedException();
+        }
     }
 }
