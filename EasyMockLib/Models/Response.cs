@@ -1,16 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EasyMockLib.Models
 {
     public class Response
     {
         public Body ResponseBody { get; set; }
-        public HttpStatusCode StatusCode { get; set; }
+        private HttpStatusCode _statusCode;
+        public HttpStatusCode StatusCode
+        {
+            get => _statusCode;
+            set
+            {
+                if (_statusCode != value)
+                {
+                    _statusCode = value;
+                    OnPropertyChanged(nameof(StatusCode));
+                }
+            }
+        }
         public int Delay { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

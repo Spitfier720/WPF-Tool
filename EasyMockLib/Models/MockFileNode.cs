@@ -41,6 +41,10 @@ namespace EasyMockLib.Models
                 {
                     return matchingMock;
                 }
+                else
+                {
+                    return mocks.First();
+                }
             }
             return null;
         }

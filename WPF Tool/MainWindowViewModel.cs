@@ -304,7 +304,7 @@ namespace WPF_Tool
             MockNode mock = null;
             string requestContent = ReadRequest(context);
             string method = context.Request.HttpMethod.ToString();
-            if (context.Request.ContentType.StartsWith("application/json"))
+            if (context.Request.HttpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase) || context.Request.ContentType.StartsWith("application/json"))
             {
                 // REST request
                 method = context.Request.HttpMethod.ToString();
@@ -516,6 +516,7 @@ namespace WPF_Tool
 
                             _unsavedChanges = true;
                             MarkNodeDirty(node);
+
                         }
 
                     }

@@ -150,9 +150,11 @@
                         </DataTrigger>
                         <DataTrigger Binding="{Binding IsHovered}" Value="True">
                             <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Background" Value="Yellow"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding IsDescendantError}" Value="True">
+                        <DataTrigger Binding="{Binding IsDescendant}" Value="True">
                             <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Background" Value="Yellow"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
