@@ -11,8 +11,6 @@ namespace WPF_Tool
     }
     internal class MockTreeNode : TreeNode, INotifyPropertyChanged
     {
-        private MockNode _cachedMockNode;
-        private Response _cachedResponse;
 
         public MockTreeNode(MockFileNode fileNode)
         {
@@ -32,24 +30,12 @@ namespace WPF_Tool
             NodeType = NodeTypes.MockItem;
             Tag = node;
             Header = $"{node.Url} - {node.MethodName}";
-            CacheMockNodeProperties();
-        }
+            
+            node.PropertyChanged += OnMockNodePropertyChanged;
 
-        private void CacheMockNodeProperties()
-        {
-            if (Tag is MockNode mockNode)
+            if (node.Response != null)
             {
-                _cachedMockNode = mockNode;
-                _cachedResponse = mockNode.Response;
-
-                // Listen for MockNode property changes
-                _cachedMockNode.PropertyChanged += OnMockNodePropertyChanged;
-
-                // Listen for Response property changes
-                if (_cachedResponse != null)
-                {
-                    _cachedResponse.PropertyChanged += OnResponsePropertyChanged;
-                }
+                node.Response.PropertyChanged += OnResponsePropertyChanged;
             }
         }
 
@@ -124,43 +110,19 @@ namespace WPF_Tool
 
         private void OnMockNodePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            // If the Response object was replaced, update our cache
-            if (e.PropertyName == nameof(MockNode.Response))
+            // Only need to react if the Response object itself changes
+            if (e.PropertyName == nameof(MockNode.Url) || e.PropertyName == nameof(MockNode.MethodName))
             {
-                if (_cachedResponse != null)
-                {
-                    _cachedResponse.PropertyChanged -= OnResponsePropertyChanged;
-                }
-
-                _cachedResponse = _cachedMockNode.Response;
-
-                if (_cachedResponse != null)
-                {
-                    _cachedResponse.PropertyChanged += OnResponsePropertyChanged;
-                }
-
-                OnPropertyChanged(nameof(StatusCodeForHighlight));
+                Header = $"{((MockNode)sender).Url} - {((MockNode)sender).MethodName}";
+                OnPropertyChanged(nameof(Header));
             }
         }
 
         private void OnResponsePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            // Notify UI when StatusCode changes
             if (e.PropertyName == nameof(Response.StatusCode))
             {
                 OnPropertyChanged(nameof(StatusCodeForHighlight));
-            }
-        }
-
-        ~MockTreeNode()
-        {
-            if (_cachedMockNode != null)
-            {
-                _cachedMockNode.PropertyChanged -= OnMockNodePropertyChanged;
-            }
-            if (_cachedResponse != null)
-            {
-                _cachedResponse.PropertyChanged -= OnResponsePropertyChanged;
             }
         }
     }

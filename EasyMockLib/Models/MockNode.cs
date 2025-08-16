@@ -6,51 +6,39 @@ namespace EasyMockLib.Models
     public class MockNode : INotifyPropertyChanged
     {
         public Request Request { get; set; }
-        private Response _response;
-        public Response Response
+        public Response Response { get; set; }
+        private string _url;
+        public string Url
         {
-            get => _response;
+            get => _url;
             set
             {
-                if (_response != value)
+                if (_url != value)
                 {
-                    // Unsubscribe from old response
-                    if (_response != null)
-                    {
-                        _response.PropertyChanged -= OnResponsePropertyChanged;
-                    }
-
-                    _response = value;
-
-                    // Subscribe to new response
-                    if (_response != null)
-                    {
-                        _response.PropertyChanged += OnResponsePropertyChanged;
-                    }
-
-                    OnPropertyChanged(nameof(Response));
-                    OnPropertyChanged(nameof(StatusCodeForHighlight));
+                    _url = value;
+                    OnPropertyChanged(nameof(Url));
                 }
             }
         }
-        public string Url { get; set; }
-        public string MethodName { get; set; }
+
+        private string _methodName;
+        public string MethodName
+        {
+            get => _methodName;
+            set
+            {
+                if (_methodName != value)
+                {
+                    _methodName = value;
+                    OnPropertyChanged(nameof(MethodName));
+                }
+            }
+        }
         public string Description { get; set; }
         public ServiceType ServiceType { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-        public int StatusCodeForHighlight => (int)(Response?.StatusCode ?? HttpStatusCode.OK);
-
-        private void OnResponsePropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(Response.StatusCode))
-            {
-                OnPropertyChanged(nameof(StatusCodeForHighlight));
-            }
-        }
-
     }
 }
