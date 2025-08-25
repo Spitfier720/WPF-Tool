@@ -1,5 +1,6 @@
 ﻿using EasyMockLib.MatchingPolicies;
 using EasyMockLib.Models;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
@@ -32,7 +33,6 @@ namespace WPF_Tool
 
         public ObservableCollection<TreeNode> RootNodes { get; } = new();
         public ObservableCollection<RequestResponsePair> RequestResponsePairs { get; } = new();
-        public ICommand MockNodeContextMenuCommand { get; }
         public ICommand ClearLogCommand { get; }
         public ICommand LoadMockFileCommand { get; }
         public ICommand StartServiceCommand { get; }
@@ -42,24 +42,22 @@ namespace WPF_Tool
         public ICommand WindowCloseCommand { get; }
         public ICommand ResponseBodyMouseEnterCommand { get; }
         public ICommand ResponseBodyMouseLeaveCommand { get; }
+        public ICommand SaveLogCommand { get; }
+        public ICommand AddCommand { get; }
+        public ICommand EditCommand { get; }
+        public ICommand RemoveCommand { get; }
+        public ICommand RefreshCommand { get; }
+        public ICommand SaveCommand { get; }
 
         private readonly IDialogService _dialogService;
         private readonly IFileDialogService _fileDialogService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private string _logOutput;
+        private StringBuilder _logOutput = new StringBuilder();
         public string LogOutput
         {
-            get => _logOutput;
-            set
-            {
-                if (_logOutput != value)
-                {
-                    _logOutput = value;
-                    OnPropertyChanged(nameof(LogOutput));
-                }
-            }
+            get => _logOutput.ToString();
         }
 
         private bool _isMockFileSelected;
@@ -119,15 +117,43 @@ namespace WPF_Tool
 
                 RootNodes.Add(new MockTreeNode(mockFileNode));
             }
-
-            MockNodeContextMenuCommand = new RelayCommand<object>(OnMockNodeContextMenuAction);
+            
             ClearLogCommand = new RelayCommand<object>(_ =>
             {
                 RequestResponsePairs.Clear();
-                LogOutput = string.Empty;
+                _logOutput = new StringBuilder();
                 OnPropertyChanged(nameof(RequestResponsePairs));
                 OnPropertyChanged(nameof(LogOutput));
             });
+
+            SaveLogCommand = new RelayCommand<object>(_ =>
+            {
+                string logFilePath = _fileDialogService.SaveFile("XML Files (*.xml)|*.xml", "MockServiceLog.xml");
+
+                ObservableCollection<MockNode> nodes = new ObservableCollection<MockNode>();
+
+                foreach(RequestResponsePair pair in  RequestResponsePairs)
+                {
+                    MockNode node = new MockNode()
+                    {
+                        Request = new Request(),
+                        Response = new Response()
+                    };
+
+                    node.Request.RequestBody.Content = pair.RequestBody;
+                    node.Response.ResponseBody.Content = pair.ResponseBody;
+                    node.Response.StatusCode = (HttpStatusCode)pair.StatusCode;
+                    nodes.Add(node);
+                }
+
+                var serializer = new XmlSerializer(typeof(ObservableCollection<MockNode>));
+                using (var writer = new StreamWriter(logFilePath)) { 
+                    serializer.Serialize(writer, nodes);
+                }
+
+                MessageBox.Show("Log saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            });
+
             LoadMockFileCommand = new RelayCommand<object>(_ => LoadMockFile());
             StartServiceCommand = new RelayCommand<object>(_ => StartWebServer(), _ => CanStartService);
             StopServiceCommand = new RelayCommand<object>(_ => StopWebServer(), _ => CanStopService);
@@ -136,6 +162,12 @@ namespace WPF_Tool
             WindowCloseCommand = new RelayCommand<object>(OnClose);
             ResponseBodyMouseEnterCommand = new RelayCommand<RequestResponsePair>(OnResponseBodyMouseEnter);
             ResponseBodyMouseLeaveCommand = new RelayCommand<RequestResponsePair>(OnResponseBodyMouseLeave);
+            AddCommand = new RelayCommand<object>(Add);
+            EditCommand = new RelayCommand<object>(Edit);
+            RemoveCommand = new RelayCommand<object>(Remove);
+            RefreshCommand = new RelayCommand<object>(Refresh);
+            SaveCommand = new RelayCommand<object>(Save);
+
             _dialogService = dialogService;
             _fileDialogService = fileDialogService;
         }
@@ -235,7 +267,7 @@ namespace WPF_Tool
 
         public void StopWebServer()
         {
-            AppendOutput($"Mock service stopped.{Environment.NewLine}");
+            AppendOutput($"Mock service stopped.\n");
             Application.Current.Dispatcher.Invoke(() => IsServiceRunning = false);
             tokenSource?.Cancel();
         }
@@ -256,16 +288,19 @@ namespace WPF_Tool
                         string requestBody = requestContent;
                         string responseSummary = $"StatusCode: {mock.Response.StatusCode}";
                         string responseBody = mock.Response.ResponseBody?.Content ?? string.Empty;
-                        string mockFileSource = (FindMockNodeByResponse(responseBody) as MockTreeNode)?.Parent?.Tag is MockFileNode fileNode
+
+                        MockTreeNode source = FindMockNodeByResponse(responseBody) as MockTreeNode;
+                        string mockFileSource = source?.Parent?.Tag is MockFileNode fileNode
                             ? fileNode.MockFile
                             : string.Empty;
+                        MockTreeNode mockNodeSource = source ?? null;
 
                         if (mock.Response.Delay != 0)
                             AppendOutput("Sleeping for " + mock.Response.Delay + " seconds...");
                         Thread.Sleep(mock.Response.Delay * 1000);
                         OutputMockResponse(mock, context, response);
 
-                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody, (int)mock.Response.StatusCode, mockFileSource);
+                        AddRequestResponsePair(requestSummary, requestBody, responseSummary, responseBody, (int)mock.Response.StatusCode, mockFileSource, mockNodeSource);
                     }
                     else
                     {
@@ -408,7 +443,7 @@ namespace WPF_Tool
 
             else if (node.NodeType == NodeTypes.MockItem)
             {
-                OnMockNodeContextMenuAction(new Tuple<string, MockTreeNode>("Edit", node));
+                Edit(node);
             }
         }
         private void SaveMock(MockTreeNode root)
@@ -426,166 +461,173 @@ namespace WPF_Tool
             _unsavedChanges = false;
         }
 
-        private void OnMockNodeContextMenuAction(object parameter)
+        private void Add(object parameter)
         {
-            if (parameter is not Tuple<string, MockTreeNode> ctxParam)
-                return;
-
-            string action = ctxParam.Item1;
-            MockTreeNode node = ctxParam.Item2;
-            if (node == null) return;
-
-            switch (action)
+            if (parameter is not null && parameter is MockTreeNode node)
             {
-                case "Add":
-                    var editor = new MockNodeEditorWindow();
-                    var vm = editor.DataContext as MockNodeEditorViewModel;
-                    if (editor.ShowDialog() == true)
+                var editor = new MockNodeEditorWindow();
+                var vm = editor.DataContext as MockNodeEditorViewModel;
+                editor.Owner = Application.Current.MainWindow;
+                if (editor.ShowDialog() == true)
+                {
+                    var newMockNode = new MockNode
                     {
-                        var newMockNode = new MockNode
+                        ServiceType = vm.ServiceType,
+                        MethodName = vm.MethodName,
+                        Url = vm.Url,
+                        Description = vm.Description,
+                        Request = new Request
                         {
-                            ServiceType = vm.ServiceType,
-                            MethodName = vm.MethodName,
-                            Url = vm.Url,
-                            Description = vm.Description,
-                            Request = new Request
+                            RequestBody = new Body
                             {
-                                RequestBody = new Body
-                                {
-                                    Content = vm.RequestBody
-                                }
-                            },
-                            Response = new Response
-                            {
-                                ResponseBody = new Body
-                                {
-                                    Content = vm.ResponseBody
-                                },
-                                StatusCode = (HttpStatusCode)vm.SelectedStatusCodeOption.Code,
-                                Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0
+                                Content = vm.RequestBody
                             }
-                        };
-                        // Find the correct parent (service) and add the new node
-                        if (node.Tag is MockFileNode existingFileNode)
+                        },
+                        Response = new Response
                         {
-                            existingFileNode.Nodes.Add(newMockNode);
-                            node.Children.Add(new MockTreeNode(newMockNode) { Parent = node });
+                            ResponseBody = new Body
+                            {
+                                Content = vm.ResponseBody
+                            },
+                            StatusCode = (HttpStatusCode)vm.SelectedStatusCodeOption.Code,
+                            Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0
                         }
+                    };
+                    // Find the correct parent (service) and add the new node
+                    if (node.Tag is MockFileNode existingFileNode)
+                    {
+                        existingFileNode.Nodes.Add(newMockNode);
+                        node.Children.Add(new MockTreeNode(newMockNode) { Parent = node });
+                    }
+
+                    _unsavedChanges = true;
+                    MarkNodeDirty(node);
+                }
+            }
+        }
+
+        private void Edit(object parameter)
+        {
+            if (parameter is not null && parameter is MockTreeNode node)
+            {
+                if (node.Tag is MockNode mockNodeToEdit)
+                {
+                    var editor = new MockNodeEditorWindow();
+                    var vm = new MockNodeEditorViewModel
+                    {
+                        ServiceType = mockNodeToEdit.ServiceType,
+                        MethodName = mockNodeToEdit.MethodName,
+                        Url = mockNodeToEdit.Url,
+                        RequestBody = mockNodeToEdit.Request.RequestBody?.Content,
+                        ResponseBody = mockNodeToEdit.Response.ResponseBody?.Content,
+                        ResponseDelay = mockNodeToEdit.Response.Delay.ToString(),
+                        SelectedStatusCodeOption = new StatusCodeOption
+                        {
+                            Code = (int)mockNodeToEdit.Response.StatusCode,
+                            Name = mockNodeToEdit.Response.StatusCode.ToString()
+                        },
+                        Description = mockNodeToEdit.Description
+                    };
+
+                    vm.SelectedStatusCodeOption = vm.StatusCodeOptions
+                        .FirstOrDefault(o => o.Code == (int)mockNodeToEdit.Response.StatusCode);
+
+                    var mockNodeEditor = new MockNodeEditorWindow();
+                    mockNodeEditor.DataContext = vm;
+                    mockNodeEditor.Owner = Application.Current.MainWindow;
+
+                    if (mockNodeEditor.ShowDialog() == true)
+                    {
+                        mockNodeToEdit.ServiceType = vm.ServiceType;
+                        mockNodeToEdit.MethodName = vm.MethodName;
+                        mockNodeToEdit.Url = vm.Url;
+                        mockNodeToEdit.Request.RequestBody.Content = vm.RequestBody;
+                        mockNodeToEdit.Response.ResponseBody.Content = vm.ResponseBody;
+                        mockNodeToEdit.Response.Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0;
+                        mockNodeToEdit.Response.StatusCode = (HttpStatusCode)vm.SelectedStatusCodeOption.Code;
+                        mockNodeToEdit.Description = vm.Description;
 
                         _unsavedChanges = true;
                         MarkNodeDirty(node);
-                    }
-                    break;
 
-                case "Edit":
-                    if (node.Tag is MockNode mockNodeToEdit)
+                    }
+                }
+            }
+        }
+        
+        private void Remove(object parameter) { 
+            if (parameter is not null && parameter is MockTreeNode node)
+            {
+                if (node.NodeType == NodeTypes.MockFile)
+                {
+                    if (node.IsDirty)
                     {
-                        editor = new MockNodeEditorWindow();
-                        vm = new MockNodeEditorViewModel
+                        var result = MessageBox.Show(
+                            "You have made changes to the mockup. Do you want to save it before remove it?",
+                            "Confirmation", MessageBoxButton.YesNo);
+                        if (result == MessageBoxResult.Yes)
                         {
-                            ServiceType = mockNodeToEdit.ServiceType,
-                            MethodName = mockNodeToEdit.MethodName,
-                            Url = mockNodeToEdit.Url,
-                            RequestBody = mockNodeToEdit.Request.RequestBody?.Content,
-                            ResponseBody = mockNodeToEdit.Response.ResponseBody?.Content,
-                            ResponseDelay = mockNodeToEdit.Response.Delay.ToString(),
-                            SelectedStatusCodeOption = new StatusCodeOption
-                            {
-                                Code = (int)mockNodeToEdit.Response.StatusCode,
-                                Name = mockNodeToEdit.Response.StatusCode.ToString()
-                            },
-                            Description = mockNodeToEdit.Description
+                            SaveMock(node);
+                            node.IsDirty = false;
+                            MessageBox.Show("Mock saved.", "Saved", MessageBoxButton.OK);
+                        }
+                    }
+                }
+                else
+                {
+                    var root = node;
+                    while (root.Tag as MockFileNode == null && root.Parent != null)
+                        root = (MockTreeNode)root.Parent;
+
+                    if (root.Tag is MockFileNode mockFileNode && node.Tag is MockNode mockNode)
+                        mockFileNode.Nodes.Remove(mockNode);
+
+                    MarkNodeDirty(node);
+                }
+                if (node.Parent != null)
+                    node.Parent.Children.Remove(node);
+                else
+                    RootNodes.Remove(node);
+
+                _unsavedChanges = true;
+            }
+        }
+
+        private void Refresh(object parameter)
+        {
+            if (parameter is not null && parameter is MockTreeNode node)
+            {
+                if (node.Tag is MockFileNode fileNode)
+                {
+                    int index = RootNodes.IndexOf(node);
+                    if (index >= 0)
+                    {
+                        var refreshedMockFileNode = new MockFileNode()
+                        {
+                            MockFile = fileNode.MockFile,
+                            Nodes = ParseXML(fileNode.MockFile)
                         };
 
-                        vm.SelectedStatusCodeOption = vm.StatusCodeOptions
-                            .FirstOrDefault(o => o.Code == (int)mockNodeToEdit.Response.StatusCode);
-
-                        var mockNodeEditor = new MockNodeEditorWindow();
-                        mockNodeEditor.DataContext = vm;
-
-                        if (mockNodeEditor.ShowDialog() == true)
-                        {
-                            mockNodeToEdit.ServiceType = vm.ServiceType;
-                            mockNodeToEdit.MethodName = vm.MethodName;
-                            mockNodeToEdit.Url = vm.Url;
-                            mockNodeToEdit.Request.RequestBody.Content = vm.RequestBody;
-                            mockNodeToEdit.Response.ResponseBody.Content = vm.ResponseBody;
-                            mockNodeToEdit.Response.Delay = int.TryParse(vm.ResponseDelay, out int delay) ? delay : 0;
-                            mockNodeToEdit.Response.StatusCode = (HttpStatusCode)vm.SelectedStatusCodeOption.Code;
-                            mockNodeToEdit.Description = vm.Description;
-
-                            _unsavedChanges = true;
-                            MarkNodeDirty(node);
-
-                        }
-
+                        RootNodes[index] = new MockTreeNode(refreshedMockFileNode);
                     }
-                    break;
+                }
+            }
+        }
 
-                case "Remove":
-                    if (node.NodeType == NodeTypes.MockFile)
-                    {
-                        if (node.IsDirty)
-                        {
-                            var result = MessageBox.Show(
-                                "You have made changes to the mockup. Do you want to save it before remove it?",
-                                "Confirmation", MessageBoxButton.YesNo);
-                            if (result == MessageBoxResult.Yes)
-                            {
-                                SaveMock(node);
-                                node.IsDirty = false;
-                                MessageBox.Show("Mock saved.", "Saved", MessageBoxButton.OK);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        var root = node;
-                        while(root.Tag as MockFileNode == null && root.Parent != null)
-                            root = (MockTreeNode)root.Parent;
-
-                        if(root.Tag is MockFileNode mockFileNode && node.Tag is MockNode mockNode)
-                            mockFileNode.Nodes.Remove(mockNode);
-
-                        MarkNodeDirty(node);
-                    }
-                    if (node.Parent != null)
-                        node.Parent.Children.Remove(node);
-                    else
-                        RootNodes.Remove(node);
-
-                    _unsavedChanges = true;
-                    break;
-
-                case "Refresh":
-                    if (node.Tag is MockFileNode fileNode)
-                    {
-                        int index = RootNodes.IndexOf(node);
-                        if (index >= 0)
-                        {
-                            var refreshedMockFileNode = new MockFileNode()
-                            {
-                                MockFile = fileNode.MockFile,
-                                Nodes = ParseXML(fileNode.MockFile)
-                            };
-
-                            RootNodes[index] = new MockTreeNode(refreshedMockFileNode);
-                        }
-                    }
-
-                    break;
-
-                case "Save":
-                    SaveMock(node);
-                    break;
+        private void Save(object parameter)
+        {
+            if (parameter is not null && parameter is MockTreeNode node)
+            {
+                SaveMock(node);
             }
         }
 
         public void AppendOutput(string message)
         {
-            LogOutput += message + Environment.NewLine;
+            _logOutput.Append(message + Environment.NewLine);
+            OnPropertyChanged(nameof(LogOutput));
         }
-        public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody, int statusCode, string mockFileSource = "")
+        public void AddRequestResponsePair(string requestSummary, string requestBody, string responseSummary, string responseBody, int statusCode, string mockFileSource = "", TreeNode mockNodeSource = null)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -596,7 +638,8 @@ namespace WPF_Tool
                     ResponseSummary = responseSummary,
                     ResponseBody = responseBody,
                     StatusCode = statusCode,
-                    MockFileSource = mockFileSource
+                    MockFileSource = mockFileSource,
+                    MockNodeSource = mockNodeSource
                 });
             });
 
@@ -696,21 +739,21 @@ namespace WPF_Tool
 
         private void OnResponseBodyMouseEnter(RequestResponsePair pair)
         {
-            var node = FindMockNodeByResponse(pair.ResponseBody) as MockTreeNode;
+            var node = pair.MockNodeSource as MockTreeNode;
             if (node != null)
             {
                 node.IsHovered = true;
-                node.UpdateAncestorErrorStates(node.Parent as MockTreeNode);
+                node.UpdateAncestorStates(node.Parent as MockTreeNode);
             }
         }
 
         private void OnResponseBodyMouseLeave(RequestResponsePair pair)
         {
-            var node = FindMockNodeByResponse(pair.ResponseBody) as MockTreeNode;
+            var node = pair.MockNodeSource as MockTreeNode;
             if (node != null)
             {
                 node.IsHovered = false;
-                node.UpdateAncestorErrorStates(node.Parent as MockTreeNode);
+                node.UpdateAncestorStates(node.Parent as MockTreeNode);
             }
         }
 

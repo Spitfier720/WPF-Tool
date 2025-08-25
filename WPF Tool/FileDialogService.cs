@@ -7,4 +7,15 @@ public class FileDialogService : IFileDialogService
         var dlg = new OpenFileDialog { Filter = filter };
         return dlg.ShowDialog() == true ? dlg.FileName : null;
     }
+
+    public string SaveFile(string filter, string defaultExt)
+    {
+        SaveFileDialog saveFileDialog = new SaveFileDialog
+        {
+            Filter = filter,
+            DefaultExt = defaultExt
+        };
+
+        return saveFileDialog.ShowDialog() == true ? saveFileDialog.FileName : null;
+    }
 }

@@ -6,7 +6,6 @@
         local:WindowClosingCommandBehavior.ClosingCommand="{Binding WindowCloseCommand}"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
-        <local:ContextMenuParameterConverter x:Key="ContextMenuParameterConverter"/>
         <local:IsErrorStatusCodeConverter x:Key="IsErrorStatusCodeConverter"/>
 
         <HierarchicalDataTemplate DataType="{x:Type local:TreeNode}" ItemsSource="{Binding Children}">
@@ -15,52 +14,41 @@
 
         <ContextMenu x:Key="TreeViewItemContextMenu" x:Shared="False">
             <MenuItem Header="Add" 
-                      Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      Command="{Binding DataContext.AddCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                       IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
-                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Add">
-                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                    </MultiBinding>
+                    <Binding />
                 </MenuItem.CommandParameter>
             </MenuItem>
 
             <MenuItem Header="Edit" 
-                      Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                       IsEnabled="{Binding DataContext.IsMockNodeSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
-                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Edit">
-                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                    </MultiBinding>
+                    <Binding />
                 </MenuItem.CommandParameter>
             </MenuItem>
 
-            <MenuItem Header="Remove" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}">
-                
+            <MenuItem Header="Remove" Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
-                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Remove">
-                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                    </MultiBinding>
+                    <Binding />
                 </MenuItem.CommandParameter>
             
             </MenuItem>
 
             <MenuItem Header="Refresh"
-                      Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      Command="{Binding DataContext.RefreshCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                       IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
                 <MenuItem.CommandParameter>
-                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Refresh">
-                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                    </MultiBinding>
+                    <Binding />
                 </MenuItem.CommandParameter>
             </MenuItem>
 
-            <MenuItem Header="Save" Command="{Binding DataContext.MockNodeContextMenuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+            <MenuItem Header="Save" Command="{Binding DataContext.SaveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                       IsEnabled="{Binding DataContext.IsMockFileSelected, RelativeSource={RelativeSource AncestorType=Window}}">
 
                 <MenuItem.CommandParameter>
-                    <MultiBinding Converter="{StaticResource ContextMenuParameterConverter}" ConverterParameter="Save">
-                        <Binding RelativeSource="{RelativeSource AncestorType=TreeViewItem}" />
-                    </MultiBinding>
+                    <Binding />
                 </MenuItem.CommandParameter>
 
             </MenuItem>
@@ -122,6 +110,7 @@
             <Button Content="Stop Service" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding StopServiceCommand}" IsEnabled="{Binding CanStopService}"/>
             <Button Content="Load Mock File" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding LoadMockFileCommand}" IsEnabled="{Binding CanLoadMockFile}"/>
             <Button Content="Clear Log" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding ClearLogCommand}"/>
+            <Button Content="Save Log" Height="30" Margin="10,0" Style="{StaticResource ModernMenuButton}" Command="{Binding SaveLogCommand}"/>
         </StackPanel>
 
         <!-- TreeView Sidebar -->
@@ -261,7 +250,7 @@
                               VerticalAlignment="Center"
                               ShowsPreview="True"/>
                 <TextBox Grid.Row="2"
-                         Text="{Binding LogOutput, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding LogOutput, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                          IsReadOnly="True"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Auto"

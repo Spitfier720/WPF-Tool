@@ -93,7 +93,7 @@ namespace WPF_Tool
             }
         }
 
-        public void UpdateAncestorErrorStates(MockTreeNode node)
+        public void UpdateAncestorStates(MockTreeNode node)
         {
             while (node != null)
             {

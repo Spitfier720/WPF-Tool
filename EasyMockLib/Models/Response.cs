@@ -5,6 +5,11 @@ namespace EasyMockLib.Models
 {
     public class Response
     {
+        public Response()
+        {
+            ResponseBody = new Body();
+        }
+
         public Body ResponseBody { get; set; }
         private HttpStatusCode _statusCode;
         public HttpStatusCode StatusCode
